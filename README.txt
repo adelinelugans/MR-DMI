@@ -1,11 +1,31 @@
-MR-DMI CONNECTED V1
+import base64, json, os
+from flask import Flask, request, render_template_string
+import anthropic
 
-Installation PC/Mac/Linux:
-1. Installer Python 3
-2. pip install -r requirements.txt
-3. python app.py
-4. ouvrir http://localhost:8080
+app = Flask(__name__)
+MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5-5")
+SCANNERS = ["Magnetom Altea 1,5 T", "Magnetom Sola 1,5 T", "Magnetom Flow 1,5 T"]
 
-Pour test sur téléphone à distance, déployer le dossier sur un serveur HTTPS.
 
-Fonctions: recherche AccessGUDID/openFDA, mémoire SQLite automatique, pré-vérification MRI. Le statut UDI ne remplace pas la notice constructeur.
+def read_card(img_bytes, media_type):
+    client = anthropic.Anthropic()  # lit ANTHROPIC_API_KEY
+    msg = client.messages.create(
+        model=MODEL, max_tokens=500,
+        messages=[{"role": "user", "content": [
+            {"type": "image", "source": {"type": "base64", "media_type": media_type,
+                                         "data": base64.b64encode(img_bytes).decode()}},
+            {"type": "text", "text": (
+                "Carte de porteur d'un dispositif médical implantable. Réponds UNIQUEMENT en JSON : "
+                '{"fabricant":"","modele":"","numero_serie":"","type":"","date_implantation":""}. '
+                "Laisse vide ce qui n'est pas lisible. N'invente rien.")}]}])
+    txt = msg.content[0].text.strip().replace("```json", "").replace("```", "").strip()
+    return json.loads(txt)
+
+
+CACHE = {}
+
+
+def lookup(card, scanner):
+    modele = (card.get("modele") or "").strip()
+    if not modele:
+        return None
