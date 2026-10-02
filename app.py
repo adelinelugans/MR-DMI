@@ -1,5 +1,6 @@
 from flask import Flask,request,jsonify,send_from_directory
 import sqlite3,urllib.request,urllib.parse,json,datetime
+from engine import search_catalog,compare_conditions
 A=Flask(__name__,static_folder="web")
 def con():
  c=sqlite3.connect("mrdmi.db");c.row_factory=sqlite3.Row;c.execute("CREATE TABLE IF NOT EXISTS devices(di TEXT PRIMARY KEY, company TEXT, brand TEXT, model TEXT, mri TEXT, source TEXT, raw TEXT)");c.commit();return c
@@ -22,7 +23,16 @@ def dev():
  return jsonify(ok=True,cached=False,device=x)
 @A.get("/api/library")
 def lib():return jsonify(devices=[dict(x) for x in con().execute("SELECT di,company,brand,model,mri,source FROM devices").fetchall()])
+@A.get("/api/catalog")
+def catalog():
+ q=request.args.get("q","")
+ return jsonify(results=search_catalog(q),note="Correspondance documentaire indicative, jamais une identification du modèle")
+@A.post("/api/compare")
+def compare():
+ try:
+  data=request.get_json() or {}
+  return jsonify(compare_conditions(data.get("conditions"),data.get("exam")))
+ except (ValueError,TypeError,OverflowError):return jsonify(error="Paramètres de comparaison invalides"),400
 @A.get("/")
 def home():return send_from_directory(".","index.html")
 if __name__=="__main__":con();A.run(host="0.0.0.0",port=8080)
-
