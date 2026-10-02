@@ -23,5 +23,6 @@ def dev():
 @A.get("/api/library")
 def lib():return jsonify(devices=[dict(x) for x in con().execute("SELECT di,company,brand,model,mri,source FROM devices").fetchall()])
 @A.get("/")
-def home():return send_from_directory("web","index.html")
+def home():return send_from_directory(".","index.html")
 if __name__=="__main__":con();A.run(host="0.0.0.0",port=8080)
+
