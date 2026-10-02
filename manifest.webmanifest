@@ -1,0 +1,16 @@
+{
+  "id": "/",
+  "name": "MR-DMI — lecture de dispositifs",
+  "short_name": "MR-DMI",
+  "description": "Recherche documentaire de dispositifs et comparaison des conditions IRM avec la notice du modèle confirmé.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3f6f8",
+  "theme_color": "#163653",
+  "lang": "fr",
+  "icons": [
+    {"src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
