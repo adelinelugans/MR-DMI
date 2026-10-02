@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MR-DMI — lecture de carte</title>
+  <style>
+    :root{font:16px/1.5 system-ui,sans-serif;color:#172638;background:#f3f6f8}
+    *{box-sizing:border-box}body{margin:0}header{background:#163653;color:white;padding:1.4rem max(1rem,calc((100% - 980px)/2))}
+    h1{margin:0;font-size:1.7rem}header p{margin:.2rem 0 0;color:#d9e7f0}
+    main{max-width:980px;margin:1.5rem auto;padding:0 1rem;display:grid;gap:1rem}
+    section{background:white;border:1px solid #d9e2e8;border-radius:12px;padding:1.25rem;box-shadow:0 2px 9px #162b3b0b}
+    h2{font-size:1.2rem;margin:0 0 1rem}label{display:block;font-weight:650;margin:.8rem 0 .3rem}
+    input,textarea,select{width:100%;font:inherit;padding:.7rem;border:1px solid #a8b9c5;border-radius:7px;background:white}
+    textarea{min-height:8rem;resize:vertical}button{font:inherit;cursor:pointer;border:0;border-radius:7px;padding:.7rem 1rem;background:#086b79;color:white;font-weight:650}
+    button:disabled{opacity:.55;cursor:wait}.row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.hint{color:#526675;font-size:.93rem}
+    .notice{border-left:4px solid #bc6a19;padding:.65rem .9rem;background:#fff5e8;margin:1rem 0}
+    .result{border:1px solid #bed5dc;background:#f1f9fa;border-radius:8px;padding:1rem;margin-top:1rem;white-space:pre-wrap}
+    .result dt{font-weight:650}.result dd{margin:0 0 .65rem;overflow-wrap:anywhere}
+    .error{color:#9d2e25}img{max-width:100%;max-height:250px;object-fit:contain;display:block;margin:.75rem 0}
+    @media(max-width:620px){.row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<header><h1>MR-DMI</h1><p>Lecture assistée des cartes de dispositifs implantables</p></header>
+<main>
+  <section>
+    <h2>1. Photographier la carte</h2>
+    <p class="hint">Le texte est reconnu dans votre navigateur. La photo n'est pas envoyée à MR-DMI. Vérifiez chaque caractère extrait, surtout le modèle et l'identifiant.</p>
+    <input id="photo" type="file" accept="image/*" capture="environment" aria-label="Photo de la carte de porteur">
+    <img id="preview" alt="Aperçu de la carte" hidden>
+    <button id="read" type="button" disabled>Lire le texte de la carte</button>
+    <p id="ocr-status" role="status" aria-live="polite"></p>
+    <label for="raw">Texte lu, à corriger si nécessaire</label>
+    <textarea id="raw" autocomplete="off" spellcheck="false"></textarea>
+  </section>
+  <section>
+    <h2>2. Vérifier les références</h2>
+    <div class="row"><div><label for="maker">Fabricant</label><input id="maker" autocomplete="off"></div>
+    <div><label for="model">Modèle exact</label><input id="model" autocomplete="off"></div></div>
+    <label for="udi">Identifiant de dispositif (UDI-DI), si présent</label>
+    <input id="udi" inputmode="text" autocomplete="off" placeholder="Ex. 00848486001414">
+    <p class="hint">Un numéro de série ou un code de lot n'est pas un UDI-DI. La recherche automatique ne couvre pas tous les dispositifs commercialisés en Europe.</p>
+    <button id="lookup" type="button">Rechercher l'UDI-DI</button>
+    <div id="result" aria-live="polite"></div>
+  </section>
+  <section>
+    <h2>3. Contrôler les conditions IRM</h2>
+    <div class="notice"><strong>Aucune compatibilité IRM n'est calculée ici.</strong> Une catégorie « MR Conditional » ne donne pas à elle seule les conditions de champ, SAR/B1+rms, gradients, antenne, position, délai ou programmation du DMI.</div>
+    <label for="scanner">Machine envisagée</label>
+    <select id="scanner"><option>Magnetom Altea 1,5 T</option><option>Magnetom Sola 1,5 T</option><option>Magnetom Flow 1,5 T</option><option>Autre machine — à préciser</option></select>
+    <label for="source">Lien vers la notice fabricant du modèle exact</label>
+    <input id="source" type="url" placeholder="https://..." autocomplete="off">
+    <p class="hint">Comparez la notice du fabricant, la carte corrigée et le protocole local avant toute décision. N'inscrivez pas de données patient dans ce formulaire.</p>
+  </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+  const $=id=>document.getElementById(id);
+  let file,objectUrl;
+  $('photo').addEventListener('change',e=>{
+    file=e.target.files[0];$('read').disabled=!file;
+    if(objectUrl)URL.revokeObjectURL(objectUrl);
+    if(file){objectUrl=URL.createObjectURL(file);$('preview').src=objectUrl;$('preview').hidden=false;}
+  });
+  $('read').addEventListener('click',async()=>{
+    if(!file)return;
+    $('read').disabled=true;$('ocr-status').textContent='Lecture en cours…';
+    let worker;
+    try{
+      if(!window.Tesseract)throw Error('Le moteur de lecture n’a pas chargé. Vérifiez la connexion Internet.');
+      worker=await Tesseract.createWorker('fra+eng');
+      const result=await worker.recognize(file);
+      $('raw').value=result.data.text;
+      const candidates=result.data.text.match(/\b\d{8,18}\b/g)||[];
+      if(candidates.length===1)$('udi').value=candidates[0];
+      $('ocr-status').textContent='Lecture terminée. Corrigez les références avant la recherche.';
+    }catch(err){$('ocr-status').textContent='Lecture impossible : '+err.message;}
+    finally{if(worker)await worker.terminate();$('read').disabled=false;}
+  });
+  $('lookup').addEventListener('click',async()=>{
+    const q=$('udi').value.trim(),out=$('result');out.replaceChildren();
+    if(!q){out.textContent='Saisissez un UDI-DI vérifié sur la carte.';return;}
+    $('lookup').disabled=true;out.textContent='Recherche en cours…';
+    try{
+      const response=await fetch('/api/device?q='+encodeURIComponent(q));
+      const data=await response.json();
+      if(!response.ok||!data.ok)throw Error(data.error||'Dispositif non retrouvé');
+      const d=data.device,dl=document.createElement('dl');dl.className='result';
+      for(const [title,value] of [['Fabricant',d.company],['Marque',d.brand],['Modèle',d.model],['Indication MRI dans GUDID',d.mri],['Source',d.source]]){
+        const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=title;dd.textContent=value||'Non renseigné';dl.append(dt,dd);
+      }
+      out.replaceChildren(dl);
+    }catch(err){out.textContent=err.message;out.className='error';}
+    finally{$('lookup').disabled=false;}
+  });
+</script>
+</body>
+</html>
