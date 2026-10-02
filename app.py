@@ -35,4 +35,12 @@ def compare():
  except (ValueError,TypeError,OverflowError):return jsonify(error="Paramètres de comparaison invalides"),400
 @A.get("/")
 def home():return send_from_directory(".","index.html")
+@A.get("/manifest.webmanifest")
+def manifest():return send_from_directory(".","manifest.webmanifest",mimetype="application/manifest+json")
+@A.get("/sw.js")
+def service_worker():return send_from_directory(".","sw.js",mimetype="application/javascript")
+@A.get("/icon-<int:size>.png")
+def icon(size):
+ if size not in (192,512):return ("Not found",404)
+ return send_from_directory(".",f"icon-{size}.png",mimetype="image/png")
 if __name__=="__main__":con();A.run(host="0.0.0.0",port=8080)
