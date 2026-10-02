@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#163653">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon-192.png" type="image/png">
   <title>MR-DMI — lecture de carte</title>
   <style>
     :root{font:16px/1.5 system-ui,sans-serif;color:#172638;background:#f3f6f8}
@@ -24,6 +27,11 @@
 <body>
 <header><h1>MR-DMI</h1><p>Lecture assistée des cartes et comptes rendus d'implantation</p></header>
 <main>
+  <section id="install-help">
+    <h2>Installer MR-DMI sur le téléphone</h2>
+    <p class="hint">Dans Chrome sur Android, ouvrez le menu ⋮ puis « Installer l’application » ou « Ajouter à l’écran d’accueil ». Vous pourrez ensuite l’ouvrir par son icône. Une connexion Internet reste nécessaire pour la recherche et la comparaison.</p>
+    <button id="install" type="button" hidden>Installer MR-DMI</button>
+  </section>
   <section>
     <h2>1. Photographier la carte ou le compte rendu</h2>
     <p class="hint">La reconnaissance se fait dans votre navigateur. La photo n'est pas envoyée à MR-DMI. Si le document contient des données patient, ne partagez pas le texte extrait ni la photo par un autre canal sans autorisation adaptée.</p>
@@ -77,6 +85,17 @@
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
   const $=id=>document.getElementById(id);
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  let installPrompt;
+  window.addEventListener('beforeinstallprompt',event=>{
+    event.preventDefault();installPrompt=event;$('install').hidden=false;
+  });
+  $('install').addEventListener('click',async()=>{
+    if(!installPrompt)return;
+    installPrompt.prompt();await installPrompt.userChoice;
+    installPrompt=null;$('install').hidden=true;
+  });
+  window.addEventListener('appinstalled',()=>{$('install').hidden=true;});
   let file,objectUrl;
   $('photo').addEventListener('change',e=>{
     file=e.target.files[0];$('read').disabled=!file;
