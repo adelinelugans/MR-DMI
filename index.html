@@ -55,6 +55,24 @@
     <input id="source" type="url" placeholder="https://..." autocomplete="off">
     <p class="hint">Comparez la notice du fabricant, la carte corrigée et le protocole local avant toute décision. N'inscrivez pas de données patient dans ce formulaire.</p>
   </section>
+  <section>
+    <h2>4. Retrouver les documents fabricant</h2>
+    <p class="hint">Saisissez uniquement des termes techniques du dispositif, jamais le compte rendu entier ni des données patient. Les résultats par famille sont des pistes, sans conditions IRM attribuables au patient.</p>
+    <label for="terms">Marque, famille ou acte</label><input id="terms" placeholder="Ex. ATS Bentall" autocomplete="off">
+    <button id="search-docs" type="button">Chercher les sources</button>
+    <div id="documents" aria-live="polite"></div>
+  </section>
+  <section>
+    <h2>5. Comparer une notice exacte au protocole prévu</h2>
+    <p class="notice">Recopiez uniquement les limites de la notice du modèle confirmé. Les cases vides restent « inconnu ». Même si tous les nombres saisis sont respectés, d'autres conditions peuvent s'appliquer et la validation du service reste nécessaire.</p>
+    <div class="row"><div><label for="allowed-field">Champs autorisés par la notice (T, séparés par des virgules)</label><input id="allowed-field" placeholder="1.5, 3" inputmode="decimal"></div><div><label for="actual-field">Champ de la machine (T)</label><input id="actual-field" type="number" min="0" step="any" placeholder="1.5"></div></div>
+    <div class="row"><div><label for="max-sar">SAR corps entier maximal (W/kg)</label><input id="max-sar" type="number" min="0" step="any"></div><div><label for="actual-sar">SAR corps entier prévu (W/kg)</label><input id="actual-sar" type="number" min="0" step="any"></div></div>
+    <div class="row"><div><label for="max-b1">B1+rms maximal (µT)</label><input id="max-b1" type="number" min="0" step="any"></div><div><label for="actual-b1">B1+rms prévu (µT)</label><input id="actual-b1" type="number" min="0" step="any"></div></div>
+    <div class="row"><div><label for="max-gradient">Gradient spatial B0 maximal (T/m)</label><input id="max-gradient" type="number" min="0" step="any"></div><div><label for="actual-gradient">Gradient spatial B0 de la machine (T/m)</label><input id="actual-gradient" type="number" min="0" step="any"></div></div>
+    <div class="row"><div><label for="max-duration">Durée maximale par séquence (min)</label><input id="max-duration" type="number" min="0" step="any"></div><div><label for="actual-duration">Durée prévue par séquence (min)</label><input id="actual-duration" type="number" min="0" step="any"></div></div>
+    <button id="compare" type="button">Comparer les valeurs renseignées</button>
+    <div id="comparison" aria-live="polite"></div>
+  </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
@@ -107,6 +125,38 @@
       out.replaceChildren(dl);
     }catch(err){out.textContent=err.message;out.className='error';}
     finally{$('lookup').disabled=false;}
+  });
+  $('search-docs').addEventListener('click',async()=>{
+    const q=$('terms').value.trim(),out=$('documents');out.replaceChildren();
+    if(!q){out.textContent='Indiquez une marque ou une famille de dispositif.';return;}
+    if(/patient|naissance|séjour/i.test(q)){out.textContent='Retirez les données patient de la recherche.';return;}
+    try{
+      const data=await (await fetch('/api/catalog?q='+encodeURIComponent(q))).json();
+      if(!data.results.length){out.textContent='Aucune source répertoriée. Recherchez la traçabilité hospitalière ou contactez le fabricant.';return;}
+      for(const item of data.results){
+        const box=document.createElement('div');box.className='result';
+        const title=document.createElement('strong');title.textContent=item.name;
+        const p=document.createElement('p');p.textContent=item.scope+' — '+item.status;
+        const a=document.createElement('a');a.href=item.source_url;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Page fabricant ('+item.source_type+')';
+        box.append(title,p,a);out.append(box);
+      }
+      const gudid=document.createElement('a');gudid.href='https://accessgudid.nlm.nih.gov/devices/search?query='+encodeURIComponent(q);gudid.target='_blank';gudid.rel='noopener noreferrer';gudid.textContent='Recherche complémentaire AccessGUDID (catalogue américain, identification seulement)';out.append(gudid);
+    }catch(e){out.textContent='Recherche indisponible : '+e.message;}
+  });
+  $('compare').addEventListener('click',async()=>{
+    const value=id=>$(id).value===''?null:Number($(id).value);
+    const fields=$('allowed-field').value.split(',').map(x=>Number(x.trim())).filter(x=>Number.isFinite(x)&&x>0);
+    const conditions={field_t:fields,sar_wkg:value('max-sar'),b1_rms_ut:value('max-b1'),spatial_gradient_t_m:value('max-gradient'),duration_min:value('max-duration')};
+    const exam={field_t:value('actual-field'),sar_wkg:value('actual-sar'),b1_rms_ut:value('actual-b1'),spatial_gradient_t_m:value('actual-gradient'),duration_min:value('actual-duration')};
+    const out=$('comparison');out.replaceChildren();
+    try{
+      const response=await fetch('/api/compare',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({conditions,exam})});
+      const data=await response.json();if(!response.ok)throw Error(data.error);
+      const box=document.createElement('div');box.className='result';
+      const heading=document.createElement('strong');heading.textContent=data.overall;box.append(heading);
+      for(const finding of data.findings){const p=document.createElement('p');p.textContent=finding.criterion+' : '+finding.status+' — '+finding.detail;box.append(p);}
+      const more=document.createElement('p');more.textContent='Toujours vérifier : '+data.missing_checks.join(' ; ');box.append(more);out.append(box);
+    }catch(e){out.textContent='Comparaison impossible : '+e.message;}
   });
 </script>
 </body>
