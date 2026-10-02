@@ -21,3 +21,8 @@ Pour ajouter une notice : identifier sa référence exacte, relever la version e
 l'URL du fabricant, faire relire ses conditions par un professionnel compétent,
 puis seulement créer une entrée de référence. Conserver les familles comme pistes
 séparées. Les limites numériques ne sont pas encore alimentées automatiquement.
+# Parcours documentaire sur téléphone
+
+L'utilisateur choisit séparément l'appareil photo ou un fichier existant (image, PDF, texte). Le PDF texte est lu dans le navigateur ; les pages image passent par OCR dans le navigateur. Le document et les données patient ne sont pas transmis au serveur. L'analyse locale ne transmet au catalogue que des termes techniques reconnus. Après une recherche UDI-DI, le fabricant et le modèle trouvés dans GUDID sont affichés et les sources fabricant connues sont recherchées automatiquement.
+
+Le catalogue lie des familles à des sources officielles, pas des conditions IRM à un patient. Il ne contient actuellement aucune notice IRM de modèle exact avec paramètres structurés et vérifiés. Par conséquent l'interface indique « aucun paramètre vérifié » et n'affiche aucun réglage machine automatique. L'identification d'un modèle ou d'un système complet et la validation clinique exigent la notice applicable et le protocole du service. Le numéro de série seul ne constitue pas un UDI-DI et ne permet pas une recherche universelle publique.
