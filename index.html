@@ -35,9 +35,11 @@
   <section>
     <h2>1. Photographier la carte ou le compte rendu</h2>
     <p class="hint">La reconnaissance se fait dans votre navigateur. La photo n'est pas envoyée à MR-DMI. Si le document contient des données patient, ne partagez pas le texte extrait ni la photo par un autre canal sans autorisation adaptée.</p>
-    <input id="photo" type="file" accept="image/*" capture="environment" aria-label="Photo de la carte ou du compte rendu">
+    <div class="row"><div><label for="camera">Prendre une photo</label><input id="camera" type="file" accept="image/*" capture="environment" aria-label="Ouvrir l’appareil photo"></div>
+    <div><label for="document">Choisir une photo ou un fichier existant</label><input id="document" type="file" accept="image/*,application/pdf,.pdf,text/plain,.txt" aria-label="Choisir une image, un PDF ou un fichier texte sur le téléphone"></div></div>
+    <p id="selected-file" class="hint" role="status"></p>
     <img id="preview" alt="Aperçu de la carte" hidden>
-    <button id="read" type="button" disabled>Lire le texte de la carte</button>
+    <button id="read" type="button" disabled>Lire le document</button>
     <p id="ocr-status" role="status" aria-live="polite"></p>
     <label for="raw">Texte lu, à corriger si nécessaire (vous pouvez aussi le coller ici)</label>
     <textarea id="raw" autocomplete="off" spellcheck="false"></textarea>
@@ -59,20 +61,20 @@
     <div class="notice"><strong>Identification du matériel et décision IRM : deux étapes distinctes.</strong> Un compte rendu peut indiquer une famille et une taille sans référence exacte. Une catégorie « MR Conditional » ne donne pas à elle seule les conditions de champ, SAR/B1+rms, gradients, antenne, position, délai ou programmation du DMI.</div>
     <label for="scanner">Machine envisagée</label>
     <select id="scanner"><option>Magnetom Altea 1,5 T</option><option>Magnetom Sola 1,5 T</option><option>Magnetom Flow 1,5 T</option><option>Autre machine — à préciser</option></select>
-    <label for="source">Lien vers la notice fabricant du modèle exact</label>
-    <input id="source" type="url" placeholder="https://..." autocomplete="off">
-    <p class="hint">Comparez la notice du fabricant, la carte corrigée et le protocole local avant toute décision. N'inscrivez pas de données patient dans ce formulaire.</p>
+    <p class="hint">Les sources fabricant sont recherchées automatiquement à partir des termes techniques reconnus. Aucune valeur de la notice n’est attribuée au patient tant que la référence exacte de chaque composant n’est pas établie.</p>
   </section>
   <section>
     <h2>4. Retrouver les documents fabricant</h2>
     <p class="hint">Saisissez uniquement des termes techniques du dispositif, jamais le compte rendu entier ni des données patient. Les résultats par famille sont des pistes, sans conditions IRM attribuables au patient.</p>
-    <label for="terms">Marque, famille ou acte</label><input id="terms" placeholder="Ex. ATS Bentall" autocomplete="off">
+    <label for="terms">Termes techniques extraits ou corrigés</label><input id="terms" placeholder="Ex. ATS Bentall" autocomplete="off">
     <button id="search-docs" type="button">Chercher les sources</button>
     <div id="documents" aria-live="polite"></div>
   </section>
   <section>
-    <h2>5. Comparer une notice exacte au protocole prévu</h2>
-    <p class="notice">Recopiez uniquement les limites de la notice du modèle confirmé. Les cases vides restent « inconnu ». Même si tous les nombres saisis sont respectés, d'autres conditions peuvent s'appliquer et la validation du service reste nécessaire.</p>
+    <h2>5. Paramètres IRM issus de la notice</h2>
+    <p id="manufacturer-parameters" class="notice" role="status">Aucun paramètre vérifié pour un modèle exact. L'application ne peut pas proposer de réglages machine à partir d'une famille, d'une taille ou d'un compte rendu incomplet.</p>
+    <details><summary>Comparaison manuelle pour une notice exacte déjà vérifiée</summary>
+    <p class="notice">Recopiez les limites de la notice du modèle confirmé. Les cases vides restent « inconnu » et la validation du service reste nécessaire.</p>
     <div class="row"><div><label for="allowed-field">Champs autorisés par la notice (T, séparés par des virgules)</label><input id="allowed-field" placeholder="1.5, 3" inputmode="decimal"></div><div><label for="actual-field">Champ de la machine (T)</label><input id="actual-field" type="number" min="0" step="any" placeholder="1.5"></div></div>
     <div class="row"><div><label for="max-sar">SAR corps entier maximal (W/kg)</label><input id="max-sar" type="number" min="0" step="any"></div><div><label for="actual-sar">SAR corps entier prévu (W/kg)</label><input id="actual-sar" type="number" min="0" step="any"></div></div>
     <div class="row"><div><label for="max-b1">B1+rms maximal (µT)</label><input id="max-b1" type="number" min="0" step="any"></div><div><label for="actual-b1">B1+rms prévu (µT)</label><input id="actual-b1" type="number" min="0" step="any"></div></div>
@@ -80,9 +82,11 @@
     <div class="row"><div><label for="max-duration">Durée maximale par séquence (min)</label><input id="max-duration" type="number" min="0" step="any"></div><div><label for="actual-duration">Durée prévue par séquence (min)</label><input id="actual-duration" type="number" min="0" step="any"></div></div>
     <button id="compare" type="button">Comparer les valeurs renseignées</button>
     <div id="comparison" aria-live="polite"></div>
+    </details>
   </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
   const $=id=>document.getElementById(id);
   if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
@@ -97,20 +101,51 @@
   });
   window.addEventListener('appinstalled',()=>{$('install').hidden=true;});
   let file,objectUrl;
-  $('photo').addEventListener('change',e=>{
+  const selectFile=e=>{
     file=e.target.files[0];$('read').disabled=!file;
     if(objectUrl)URL.revokeObjectURL(objectUrl);
-    if(file){objectUrl=URL.createObjectURL(file);$('preview').src=objectUrl;$('preview').hidden=false;}
-  });
+    $('preview').hidden=true;
+    $('selected-file').textContent=file?'Fichier choisi : '+file.name:'';
+    if(file && file.type.startsWith('image/')){objectUrl=URL.createObjectURL(file);$('preview').src=objectUrl;$('preview').hidden=false;}
+  };
+  $('camera').addEventListener('change',selectFile);
+  $('document').addEventListener('change',selectFile);
+  async function readPdf(file,worker){
+    if(!window.pdfjsLib)throw Error('Le lecteur PDF n’a pas chargé. Vérifiez la connexion Internet.');
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
+    if(pdf.numPages>10)throw Error('PDF de plus de 10 pages : choisissez les pages utiles du compte rendu.');
+    const pages=[];
+    for(let number=1;number<=pdf.numPages;number++){
+      $('ocr-status').textContent='Lecture du PDF : page '+number+'/'+pdf.numPages+'…';
+      const page=await pdf.getPage(number), content=await page.getTextContent();
+      let lines=content.items.map(item=>item.str).join(' ');
+      if(lines.trim().length<30){
+        const viewport=page.getViewport({scale:2}), canvas=document.createElement('canvas');
+        canvas.width=viewport.width;canvas.height=viewport.height;
+        await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
+        lines=(await worker.recognize(canvas)).data.text;
+      }
+      pages.push(lines);
+    }
+    return pages.join('\n');
+  }
   $('read').addEventListener('click',async()=>{
     if(!file)return;
     $('read').disabled=true;$('ocr-status').textContent='Lecture en cours…';
     let worker;
     try{
-      if(!window.Tesseract)throw Error('Le moteur de lecture n’a pas chargé. Vérifiez la connexion Internet.');
-      worker=await Tesseract.createWorker('fra+eng');
-      const result=await worker.recognize(file);
-      $('raw').value=result.data.text;
+      if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){
+        if(!window.Tesseract)throw Error('Le moteur OCR n’a pas chargé. Vérifiez la connexion Internet.');
+        worker=await Tesseract.createWorker('fra+eng');
+        $('raw').value=await readPdf(file,worker);
+      }else if(file.type==='text/plain'||/\.txt$/i.test(file.name)){
+        $('raw').value=await file.text();
+      }else if(file.type.startsWith('image/')){
+        if(!window.Tesseract)throw Error('Le moteur OCR n’a pas chargé. Vérifiez la connexion Internet.');
+        worker=await Tesseract.createWorker('fra+eng');
+        $('raw').value=(await worker.recognize(file)).data.text;
+      }else throw Error('Choisissez une image, un PDF ou un fichier texte.');
       $('analyze').click();
       $('ocr-status').textContent='Lecture terminée. Corrigez les références avant la recherche.';
     }catch(err){$('ocr-status').textContent='Lecture impossible : '+err.message;}
@@ -128,6 +163,8 @@
     if(relevant.length){add('Lignes à relire :',relevant.slice(0,5).join(' | '));}
     else add('Aucun indice reconnu :','Relisez le document et cherchez le compte rendu complet ou l’étiquette de traçabilité.');
     add('Statut :','référence exacte et conditions IRM non établies. Chercher la notice du fabricant pour le modèle confirmé, puis faire valider selon le protocole du service.');
+    const terms=['ATS','Bentall','Medtronic','Open Pivot'].filter(t=>s.toLowerCase().includes(t.toLowerCase()));
+    if(terms.length){$('terms').value=terms.join(' ');$('search-docs').click();}
   });
   $('lookup').addEventListener('click',async()=>{
     const q=$('udi').value.trim(),out=$('result');out.replaceChildren();
@@ -138,10 +175,14 @@
       const data=await response.json();
       if(!response.ok||!data.ok)throw Error(data.error||'Dispositif non retrouvé');
       const d=data.device,dl=document.createElement('dl');dl.className='result';
+      $('maker').value=d.company||'';$('model').value=d.model||'';
       for(const [title,value] of [['Fabricant',d.company],['Marque',d.brand],['Modèle',d.model],['Indication MRI dans GUDID',d.mri],['Source',d.source]]){
         const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=title;dd.textContent=value||'Non renseigné';dl.append(dt,dd);
       }
       out.replaceChildren(dl);
+      const maker=(d.company||'').toLowerCase(),brand=(d.brand||'').toLowerCase();
+      const terms=['Medtronic','ATS','Open Pivot','Boston Scientific'].filter(t=>(maker+' '+brand).includes(t.toLowerCase()));
+      if(terms.length){$('terms').value=terms.join(' ');$('search-docs').click();}
     }catch(err){out.textContent=err.message;out.className='error';}
     finally{$('lookup').disabled=false;}
   });
@@ -159,6 +200,7 @@
         const a=document.createElement('a');a.href=item.source_url;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Page fabricant ('+item.source_type+')';
         box.append(title,p,a);out.append(box);
       }
+      $('manufacturer-parameters').textContent='Sources fabricant retrouvées pour une famille. Aucun réglage machine n’est déduit : la référence exacte et la notice IRM applicable restent à confirmer.';
       const gudid=document.createElement('a');gudid.href='https://accessgudid.nlm.nih.gov/devices/search?query='+encodeURIComponent(q);gudid.target='_blank';gudid.rel='noopener noreferrer';gudid.textContent='Recherche complémentaire AccessGUDID (catalogue américain, identification seulement)';out.append(gudid);
     }catch(e){out.textContent='Recherche indisponible : '+e.message;}
   });

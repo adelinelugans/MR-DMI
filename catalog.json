@@ -20,5 +20,16 @@
     "source_type": "page fabricant, famille",
     "mri_conditions": null,
     "status": "piste documentaire — identification du conduit requise"
+  },
+  {
+    "id": "boston-imageready-model-lookup",
+    "name": "Boston Scientific ImageReady, recherche de modèles de stimulation et défibrillation",
+    "aliases": ["Boston Scientific", "ImageReady", "pacemaker Boston", "défibrillateur Boston"],
+    "scope": "Liste fabricant des modèles de boîtiers et sondes. La compatibilité dépend de la combinaison complète et du guide technique applicable.",
+    "manufacturer": "Boston Scientific",
+    "source_url": "https://www.bostonscientific.com/imageready/en-US/model-lookup.html",
+    "source_type": "recherche fabricant des modèles",
+    "mri_conditions": null,
+    "status": "piste documentaire — vérifier tout le système et son guide technique"
   }
 ]
