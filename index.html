@@ -22,12 +22,13 @@
     .result dt{font-weight:650}.result dd{margin:0 0 .65rem;overflow-wrap:anywhere}
     .error{color:#9d2e25}img{max-width:100%;max-height:250px;object-fit:contain;display:block;margin:.75rem 0}
     @media(max-width:620px){.row{grid-template-columns:1fr}}
+    @media print{body{background:white}body>header,main>section:not(#workflow),#workflow> :not(#workflow-result){display:none!important}main,#workflow{margin:0;padding:0;display:block;max-width:none;border:0;box-shadow:none}#workflow-result{border:0;background:white;white-space:normal}a{overflow-wrap:anywhere}a:after{content:" (" attr(href) ")"}}
   </style>
 </head>
 <body>
 <header><h1>MR-DMI</h1><p>Lecture assistée des cartes et comptes rendus d'implantation</p></header>
 <main>
-  <p class="hint">Version lecture 2026-10-07.6</p>
+  <p class="hint">Version lecture 2026-10-07.7</p>
   <section id="install-help">
     <h2>Installer MR-DMI sur le téléphone</h2>
     <p class="hint">Dans Chrome sur Android, ouvrez le menu ⋮ puis « Installer l’application » ou « Ajouter à l’écran d’accueil ». Vous pourrez ensuite l’ouvrir par son icône. Une connexion Internet reste nécessaire pour la recherche et la comparaison.</p>
@@ -106,6 +107,9 @@
     </details>
     <button id="evaluate-workflow" type="button">Préparer le dossier et vérifier les conditions documentées</button>
     <div id="workflow-result" class="result" aria-live="polite"></div>
+    <button id="print-report" type="button" disabled>Imprimer la synthèse / enregistrer en PDF</button>
+    <button id="download-report" type="button" disabled>Télécharger la synthèse texte</button>
+    <p class="hint">Synthèse technique locale sans nom patient, photo, texte du document ni numéro de série. Elle décrit une vérification partielle ; elle ne constitue pas une autorisation d’examen.</p>
   </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -132,7 +136,7 @@
     $('raw').value='';$('ocr-status').textContent='';$('evidence').hidden=true;
     $('maker').value='';$('model').value='';$('udi').value='';$('terms').value='';
     $('result').replaceChildren();$('documents').replaceChildren();
-    $('workflow-result').replaceChildren();$('components').replaceChildren();componentRows.splice(0);$('complete-inventory').value='unknown';
+    invalidateReport();$('components').replaceChildren();componentRows.splice(0);$('complete-inventory').value='unknown';
     $('selected-file').textContent=file?'Fichier choisi : '+file.name:'';
     if(file && file.type.startsWith('image/')){objectUrl=URL.createObjectURL(file);$('preview').src=objectUrl;$('preview').hidden=false;}
   };
@@ -322,10 +326,10 @@
         const box=document.createElement('div');box.className='result';
         const title=document.createElement('strong');title.textContent=item.name;
         const p=document.createElement('p');p.textContent=item.scope+' — '+item.status;
-        const a=document.createElement('a');a.href=item.source_url;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Page fabricant ('+item.source_type+')';
+        const a=document.createElement('a');a.href=item.source_url;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Source officielle ('+item.source_type+')';
         box.append(title,p,a);out.append(box);
       }
-      $('manufacturer-parameters').textContent='Sources fabricant retrouvées pour une famille. Aucun réglage machine n’est déduit : la référence exacte et la notice IRM applicable restent à confirmer.';
+      $('manufacturer-parameters').textContent='Sources documentaires retrouvées ; correspondance indicative. Aucun réglage machine n’est déduit : la référence exacte et la notice IRM applicable restent à confirmer.';
       const gudid=document.createElement('a');gudid.href='https://accessgudid.nlm.nih.gov/devices/search?query='+encodeURIComponent(q);gudid.target='_blank';gudid.rel='noopener noreferrer';gudid.textContent='Recherche complémentaire AccessGUDID (catalogue américain, identification seulement)';out.append(gudid);
     }catch(e){out.textContent='Recherche indisponible : '+e.message;}
   });
@@ -346,7 +350,16 @@
   });
   const componentTypes=[['cardiac','Boîtier cardiaque'],['lead','Sonde / électrode'],['cochlear','Implant auditif'],['neuro','Neurostimulateur'],['extension','Extension / adaptateur'],['pump','Pompe / dispositif diabète'],['other','Autre dispositif']];
   const componentRows=[];
+  let reportReady=false;
+  function invalidateReport(){reportReady=false;$('workflow-result').replaceChildren();$('print-report').disabled=true;$('download-report').disabled=true;}
+  $('print-report').addEventListener('click',()=>{if(reportReady)window.print();});
+  $('download-report').addEventListener('click',()=>{
+    if(!reportReady)return;
+    const blob=new Blob([$ ('workflow-result').innerText],{type:'text/plain;charset=utf-8'});
+    const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='MR-DMI-synthese-technique.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  });
   function addComponent(seed={}){
+    invalidateReport();
     const box=document.createElement('fieldset');box.className='result';
     const title=document.createElement('legend');title.textContent='Composant '+(componentRows.length+1);box.append(title);
     const fields={};
@@ -356,15 +369,16 @@
       if(key==='category')for(const [value,text] of componentTypes){const o=document.createElement('option');o.value=value;o.textContent=text;input.append(o);}
       if(key==='length_cm'){input.type='number';input.min='0';input.step='any';}
       input.value=seed[key]|| (key==='category'?'other':key==='system'?'1':'');wrap.append(input);box.append(wrap);fields[key]=input;
-      input.addEventListener('change',()=>{$('workflow-result').replaceChildren();});
+      input.addEventListener('input',invalidateReport);input.addEventListener('change',invalidateReport);
     }
-    const checkWrap=document.createElement('label');const check=document.createElement('input');check.type='checkbox';check.style.width='auto';checkWrap.append(check,document.createTextNode(' Référence vérifiée sur la carte complète ou la traçabilité'));box.append(checkWrap);fields.confirmed=check;check.addEventListener('change',()=>{$('workflow-result').replaceChildren();});
-    const remove=document.createElement('button');remove.type='button';remove.textContent='Retirer ce composant';remove.addEventListener('click',()=>{const i=componentRows.findIndex(r=>r.box===box);if(i>=0)componentRows.splice(i,1);box.remove();$('workflow-result').replaceChildren();componentRows.forEach((r,i)=>r.box.querySelector('legend').textContent='Composant '+(i+1));});box.append(remove);
+    const checkWrap=document.createElement('label');const check=document.createElement('input');check.type='checkbox';check.style.width='auto';checkWrap.append(check,document.createTextNode(' Référence vérifiée sur la carte complète ou la traçabilité'));box.append(checkWrap);fields.confirmed=check;check.addEventListener('change',()=>{invalidateReport();});
+    const remove=document.createElement('button');remove.type='button';remove.textContent='Retirer ce composant';remove.addEventListener('click',()=>{const i=componentRows.findIndex(r=>r.box===box);if(i>=0)componentRows.splice(i,1);box.remove();invalidateReport();componentRows.forEach((r,i)=>r.box.querySelector('legend').textContent='Composant '+(i+1));});box.append(remove);
     componentRows.push({box,fields});$('components').append(box);
   }
   function getComponents(){return componentRows.map(({fields})=>Object.fromEntries(Object.entries(fields).map(([k,f])=>[k,k==='confirmed'?f.checked:f.value.trim()])));}
   $('add-component').addEventListener('click',()=>addComponent());
   $('import-components').addEventListener('click',()=>{
+    invalidateReport();
     const ids=extractIdentifiers($('raw').value);
     if(!ids.models.length){$('workflow-result').textContent='Aucune référence lue : ajoutez les composants à partir de la traçabilité.';return;}
     for(const model of ids.models){
@@ -374,8 +388,8 @@
     }
     $('workflow-result').textContent='Références importées sans confirmation. Un nom identique peut désigner plusieurs composants : ajoutez chaque exemplaire et vérifiez les associations.';
   });
-  $('role').addEventListener('change',()=>{$('workflow-result').replaceChildren();$('workflow-exam').hidden=$('role').value!=='technologist';});
-  for(const id of ['complete-inventory','workflow-field','workflow-mode','workflow-gradient','workflow-slew','workflow-duration','workflow-wait'])$(id).addEventListener('change',()=>{$('workflow-result').replaceChildren();});
+  $('role').addEventListener('change',()=>{invalidateReport();$('workflow-exam').hidden=$('role').value!=='technologist';});
+  for(const id of ['complete-inventory','workflow-field','workflow-mode','workflow-gradient','workflow-slew','workflow-duration','workflow-wait'])$(id).addEventListener('change',()=>{invalidateReport();});
   $('evaluate-workflow').addEventListener('click',()=>{
     const number=id=>$(id).value===''?null:Number($(id).value);
     const components=getComponents();
@@ -383,7 +397,13 @@
     const evaluation=evaluateDmiWorkflow(components,exam,$('complete-inventory').value==='yes');
     const out=$('workflow-result');out.replaceChildren();
     const p=text=>{const el=document.createElement('p');el.textContent=text;out.append(el);};
-    p(evaluation.status);p('Parcours : '+$('role').selectedOptions[0].textContent+' — France / Union européenne');
+    p('MR-DMI — synthèse technique — version 2026-10-07.7 — '+new Date().toLocaleString('fr-FR'));
+    p('Vérification partielle ; aucune autorisation d’examen.');
+    p(evaluation.status);
+    for(const [i,c] of components.entries())p('Composant '+(i+1)+' — système '+c.system+' — '+c.category+' — '+c.maker+' '+c.model+(c.length_cm?' — '+c.length_cm+' cm':'')+' — référence '+(c.confirmed?'confirmée':'non confirmée'));
+    p('Inventaire complet : '+$('complete-inventory').selectedOptions[0].textContent);
+    if($('role').value==='technologist')p('Paramètres envisagés : champ '+(exam.field_t||'inconnu')+' T ; mode '+(exam.mode||'inconnu')+' ; gradient '+(exam.spatial_gradient_t_m??'inconnu')+' T/m ; slew rate '+(exam.gradient_slew_t_m_s??'inconnu')+' T/m/s ; temps actif '+(exam.total_active_min??'inconnu')+' min ; attente '+(exam.wait_min??'inconnu')+' min.');
+    p('Parcours : '+$('role').selectedOptions[0].textContent+' — France / Union européenne');
     for(const task of dmiRoleTasks($('role').value,components))p('• '+task);
     for(const missing of evaluation.missing)p('À compléter : '+missing);
     for(const record of evaluation.sources){
@@ -393,6 +413,7 @@
       const link=document.createElement('a');link.href=record.source;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Ouvrir la source officielle ; vérifier la notice applicable';box.append(t,note,link);out.append(box);
     }
     if($('role').value==='technologist')for(const f of evaluation.findings)p(f.component+' — '+f.criterion+' : '+f.status+' — '+f.detail);
+    reportReady=true;$('print-report').disabled=false;$('download-report').disabled=false;
     if(components.length)p('Les références et paramètres restent dans cette page. Aucun dossier patient ni compte utilisateur n’est créé.');
   });
 
