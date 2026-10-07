@@ -59,3 +59,5 @@ assert.equal(concurrent.sources.length,2);
 assert.equal(evaluateDmiWorkflow([cardiac,pacingLead,{...pacingLead,maker:'Medtronic'}],plan,true).sources.length,0);
 assert.deepEqual(extractIdentifiers('Abbott\nPM2272\n2088TC').models,['PM2272','2088TC']);
 console.log('15 contrôles supplémentaires systèmes cardiaques et associations réussis');
+
+assert.equal(evaluateDmiWorkflow([generator,lead,{...generator,model:'3662'}],{field_t:1.5},true).sources.length,0);

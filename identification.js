@@ -71,7 +71,7 @@ function evaluateDmiWorkflow(components,exam,inventoryComplete){
     }
     if(rule.lead_model){
       const leads=rows.filter(x=>system(x)===system(c)&&x.category==='lead');
-      if(!leads.length||leads.some(x=>!x.confirmed||normal(x.maker)!==normal(rule.maker)||normal(x.model)!==rule.lead_model||Number(x.length_cm)!==rule.lead_length_cm)){
+      if(rows.filter(x=>system(x)===system(c)&&['cardiac','neuro'].includes(x.category)).length!==1||!leads.length||leads.some(x=>!x.confirmed||normal(x.maker)!==normal(rule.maker)||normal(x.model)!==rule.lead_model||Number(x.length_cm)!==rule.lead_length_cm)){
         missing.push(label+' : chaque électrode doit être confirmée (modèle '+rule.lead_model+', longueur '+rule.lead_length_cm+' cm)');continue;
       }
       if(rows.some(x=>system(x)===system(c)&&x.category==='extension')){missing.push(label+' : extension présente, association non couverte par cette fiche');continue;}
