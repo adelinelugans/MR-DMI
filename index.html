@@ -28,7 +28,7 @@
 <body>
 <header><h1>MR-DMI</h1><p>Lecture assistée des cartes et comptes rendus d'implantation</p></header>
 <main>
-  <p class="hint">Version lecture 2026-10-07.9</p>
+  <p class="hint">Version lecture 2026-10-07.10</p>
   <section id="examples">
     <h2>Tester le parcours avec un exemple fictif</h2>
     <p>Ces exemples utilisent des références techniques réelles et des paramètres fictifs. Ils testent le parcours et les contrôles ; ils ne mesurent pas la fiabilité de lecture d’une carte patient.</p>
@@ -408,7 +408,7 @@
     const evaluation=evaluateDmiWorkflow(components,exam,$('complete-inventory').value==='yes');
     const out=$('workflow-result');out.replaceChildren();
     const p=text=>{const el=document.createElement('p');el.textContent=text;out.append(el);};
-    p('MR-DMI — synthèse technique — version 2026-10-07.9 — '+new Date().toLocaleString('fr-FR'));
+    p('MR-DMI — synthèse technique — version 2026-10-07.10 — '+new Date().toLocaleString('fr-FR'));
     if(demoMode)p('EXEMPLE FICTIF — aucune donnée patient — paramètres de démonstration.');
     p('Vérification partielle ; aucune autorisation d’examen.');
     p(evaluation.status);

@@ -96,7 +96,8 @@ function evaluateDmiWorkflow(components,exam,inventoryComplete){
 function dmiRoleTasks(role,components){
   const categories=new Set(components.map(c=>c.category));
   const tasks=role==='secretary'?['Récupérer la carte complète ou la traçabilité avec les références de chaque composant.','Transmettre le dossier au service IRM pour les modalités et la programmation du rendez-vous.']:role==='prescriber'?['Préciser l’indication clinique et la région demandée dans la prescription.','Joindre les références des dispositifs et contacter le service IRM si elles sont incomplètes.']:['Confirmer chaque référence et la notice IRM applicable au pays et à la version du système.','Contrôler toutes les conditions du système complet et les autres dispositifs présents.'];
-  if(categories.has('cardiac')||categories.has('lead'))tasks.push('Système cardiaque : récupérer les références du boîtier et de chaque sonde ; coordonner le contrôle et la programmation avec l’équipe référente.');
+  if(categories.has('cardiac'))tasks.push('Système cardiaque : récupérer les références du boîtier et de chaque sonde ; coordonner le contrôle et la programmation avec l’équipe référente.');
+  if(categories.has('lead')&&!categories.has('cardiac')&&!categories.has('neuro'))tasks.push('Sonde ou électrode seule : identifier le système auquel elle appartient et obtenir la référence du générateur.');
   if(categories.has('cochlear'))tasks.push('Implant auditif : récupérer le modèle implanté de chaque côté ; vérifier la gestion de l’aimant et les accessoires dans le guide exact.');
   if(categories.has('neuro')||categories.has('extension'))tasks.push('Neurostimulation : inventorier générateur, électrodes, extensions et accessoires ; coordonner les contrôles et la programmation requis.');
   if(categories.has('pump'))tasks.push('Pompe : préciser si elle est externe ou implantée, identifier les composants associés et faire organiser la continuité du traitement par l’équipe soignante.');
