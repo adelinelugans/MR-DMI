@@ -107,12 +107,12 @@
       "Nucleus",
       "Osia"
     ],
-    "source_url": "https://www.cochlear.com/global/en/mri/mri-nucleus",
+    "source_url": "https://www.cochlear.com/fr/fr/home/ongoing-care-and-support/device-support/mri-considerations/mri-nucleus",
     "scope": "Identifier le modèle implanté, le champ, la gestion de l’aimant et les accessoires requis dans la notice du pays applicable.",
     "source_type": "portail fabricant ; notice exacte à rechercher",
     "mri_conditions": null,
     "status": "conditions non établies — notice exacte et validation du service requises",
-    "region": "À vérifier sur le document fabricant"
+    "region": "France ; choisir les instructions régionales"
   },
   {
     "id": "medel-mri",
@@ -194,5 +194,115 @@
     "region": "France",
     "mri_conditions": null,
     "status": "document général — aucune condition patient"
+  },
+  {
+    "id": "cochlear-nucleus-emea-2024",
+    "name": "Cochlear Nucleus — instructions IRM françaises EMEA",
+    "manufacturer": "Cochlear",
+    "aliases": [
+      "CI612",
+      "CI622",
+      "CI624",
+      "CI632",
+      "CI512",
+      "CI522",
+      "CI532"
+    ],
+    "exact_models": [
+      "CI612",
+      "CI622",
+      "CI624",
+      "CI632",
+      "CI512",
+      "CI522",
+      "CI532"
+    ],
+    "source_url": "https://assets.cochlear.com/api/public/content/c34504d433b448f497b66deaf12bf54c?v=b28b3c46",
+    "source_type": "notice fabricant référencée",
+    "document_version": "D1872143-V3 — 2024-07",
+    "region": "Europe / Moyen-Orient / Afrique ; français",
+    "scope": "Référence reconnue dans cette notice. Vérifier chaque implant, la région, l’aimant et toutes les conditions. Résumé technique disponible dans le parcours équipe IRM.",
+    "mri_conditions": null,
+    "status": "notice exacte retrouvée — référence et conditions à vérifier"
+  },
+  {
+    "id": "abbott-pacing-2022",
+    "name": "Abbott — MRI-Ready Systems Manual",
+    "manufacturer": "Abbott",
+    "aliases": [
+      "PM1272",
+      "PM2272",
+      "PM1172",
+      "PM2172",
+      "PM1282",
+      "PM2282",
+      "PM1182",
+      "PM2182",
+      "2088TC",
+      "1944",
+      "1948"
+    ],
+    "exact_models": [
+      "PM1272",
+      "PM2272",
+      "PM1172",
+      "PM2172",
+      "PM1282",
+      "PM2282",
+      "PM1182",
+      "PM2182",
+      "2088TC",
+      "1944",
+      "1948"
+    ],
+    "source_url": "https://manuals.eifu.abbott/content/dam/av/manuals-eifu/global/AM/en/ARTEN600159320_A.PDF",
+    "source_type": "notice fabricant référencée",
+    "document_version": "ARTEN600159320 A — 2022-08",
+    "region": "Global anglais ; applicabilité France à confirmer",
+    "scope": "La référence apparaît dans cette notice ; une sonde seule ne définit pas le système. Résumé technique du sous-ensemble intégré dans le parcours équipe IRM.",
+    "mri_conditions": null,
+    "status": "notice documentaire — association et applicabilité locale à vérifier"
+  },
+  {
+    "id": "minimed-780g-notice",
+    "name": "Medtronic MiniMed 780G — manuel français",
+    "manufacturer": "Medtronic",
+    "aliases": [
+      "MiniMed",
+      "780G"
+    ],
+    "exact_models": [
+      "780G"
+    ],
+    "source_url": "https://resources.cloud.medtronic-diabetes.com/sites/prd/files/documents/2023-01/systeme_minimed_780g_manuel_dutilisation_du_systeme_0.pdf",
+    "source_type": "notice fabricant référencée",
+    "region": "Français ; version du système à confirmer",
+    "scope": "Consulter les avertissements IRM page 38 et les guides de chaque élément associé.",
+    "mri_conditions": null,
+    "status": "dispositif externe — préparation du retrait et continuité du traitement"
+  },
+  {
+    "id": "tandem-tslim-x2-safety",
+    "name": "Tandem t:slim X2 Control-IQ — sécurité IRM",
+    "manufacturer": "Tandem",
+    "aliases": [
+      "Tandem",
+      "t:slim X2",
+      "TSLIM X2"
+    ],
+    "exact_models": [
+      "X2"
+    ],
+    "source_url": "https://www.tandemdiabetes.com/en-GB/legal/important-safety-information/control-iq",
+    "source_type": "page fabricant ; système exact à confirmer",
+    "region": "Royaume-Uni",
+    "scope": "Retrait requis par cette source ; guide français et version logicielle à vérifier.",
+    "mri_conditions": null,
+    "status": "dispositif externe — préparation du retrait et continuité du traitement",
+    "required_terms": [
+      "tandem",
+      "slim",
+      "tslim"
+    ]
   }
 ]

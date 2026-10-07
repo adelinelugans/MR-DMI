@@ -19,8 +19,12 @@ def search_catalog(query):
     for item in CATALOG:
         haystack = " ".join([item["name"], *item["aliases"]]).casefold()
         matches = [t for t in terms if t in haystack]
+        if item.get("exact_models") and not any(model.casefold() in terms for model in item["exact_models"]):
+            continue
         # A manufacturer alone must not suggest every unrelated implant family.
         maker_terms = set(re.findall(r"[\w-]{3,}", item.get("manufacturer", "").split("(")[0].casefold()))
+        if item.get("required_terms") and not any(t in terms for t in item["required_terms"]):
+            continue
         specific_matches = [term for term in matches if term not in maker_terms]
         is_portal = item.get("source_type", "").startswith("portail fabricant") or item["id"] == "boston-imageready-model-lookup"
         is_official_guide = item.get("source_type") == "guide officiel"

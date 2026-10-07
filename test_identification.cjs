@@ -78,3 +78,48 @@ assert.equal(verify({...technical,transmit_coil:'local_head',rf_polarization:'ot
 assert.equal(verify({...technical,transmit_coil:'local_head',rf_polarization:'cp'}).blocked,false);
 assert.ok(verify({...technical,field_t:.55}).missing.some(x=>/antenne RF non évaluée/.test(x)));
 console.log('Contrôles RF, tunnel, position et informations manquantes réussis');
+
+const audit={maker:'Cochlear',model:'CI612',category:'cochlear',confirmed:true,magnet:'present'};
+const auditoryPlan={field_t:3,spatial_gradient_t_m:20,gradient_slew_t_m_s:200,bore:'horizontal_cylindrical',nucleus:'hydrogen',rf_polarization:'cp',position:'supine',external_removed:'yes',artifact_reviewed:'yes',head_angle_deg:15,head_sar_reported:'yes',head_sar_wkg:1.8};
+const auditory=(component=audit,exam=auditoryPlan)=>evaluateDmiWorkflow([component],exam,true);
+assert.equal(auditory().blocked,false);
+assert.equal(auditory(audit,{...auditoryPlan,head_sar_wkg:1.81}).blocked,true);
+assert.equal(auditory({...audit,model:'CI622'},{...auditoryPlan,head_sar_wkg:2}).blocked,false);
+assert.equal(auditory({...audit,model:'CI622'},{...auditoryPlan,head_sar_wkg:2.01}).blocked,true);
+assert.equal(auditory(audit,{...auditoryPlan,head_sar_reported:'no',landmark:'far',body_sar_wkg:2}).blocked,false);
+assert.equal(auditory(audit,{...auditoryPlan,head_sar_reported:'no',landmark:'near_below_t1',body_sar_wkg:1.81}).blocked,true);
+assert.ok(auditory(audit,{...auditoryPlan,head_sar_reported:'no',landmark:'other',body_sar_wkg:0}).findings.some(x=>x.criterion==='SAR / TAS à 3 T'&&x.status==='inconnu'));
+assert.equal(auditory(audit,{...auditoryPlan,head_angle_deg:15.1}).blocked,true);
+assert.equal(auditory(audit,{...auditoryPlan,external_removed:'no'}).blocked,true);
+assert.ok(auditory({...audit,magnet:''}).missing.some(x=>/Aimant non confirmé/.test(x)));
+assert.equal(auditory({...audit,model:'CI512'}).blocked,true);
+assert.equal(auditory({...audit,model:'CI512',magnet:'removed'}).blocked,false);
+assert.equal(auditory({...audit,model:'CI512',mri_kit:'no'},{...auditoryPlan,field_t:1.5,mode:'normal'}).blocked,true);
+assert.equal(auditory({...audit,model:'CI512',mri_kit:'yes'},{...auditoryPlan,field_t:1.5,mode:'normal'}).blocked,false);
+assert.equal(auditory(audit,{...auditoryPlan,field_t:1.5,mode:'first'}).blocked,true);
+assert.ok(auditory(audit,{...auditoryPlan,head_sar_wkg:null}).missing.some(x=>/SAR moyen tête non confirmé/.test(x)));
+assert.equal(evaluateDmiWorkflow([audit,{...audit,model:'CI622'}],{...auditoryPlan,head_sar_wkg:1.9},true).blocked,true);
+assert.deepEqual(extractIdentifiers('Cochlear CI512 CI522 CI532').models,['CI512','CI522','CI532']);
+assert.match(auditory().sources[0].document_version,/D1872143-V3/);
+console.log('Contrôles Cochlear régionaux, SAR, aimant, bilatéralité et limites réussis');
+
+assert.equal(extractIdentifiers('MiniMed 780G').makers[0],'Medtronic');
+assert.ok(extractIdentifiers('t:slim X2 Tandem').models.includes('T:SLIM X2'));
+const pump={maker:'Medtronic',model:'780G',category:'pump',confirmed:true};
+assert.equal(evaluateDmiWorkflow([pump],{},true).blocked,false);
+assert.ok(evaluateDmiWorkflow([pump],{},true).missing.some(x=>/Retrait pompe/.test(x)));
+assert.equal(evaluateDmiWorkflow([{...pump,removed:'no'}],{therapy_plan:'yes'},true).blocked,true);
+assert.equal(evaluateDmiWorkflow([{...pump,removed:'yes'}],{therapy_plan:'no'},true).blocked,true);
+assert.equal(evaluateDmiWorkflow([{...pump,removed:'yes'}],{therapy_plan:'yes'},true).blocked,false);
+assert.equal(evaluateDmiWorkflow([{...pump,maker:'Tandem',model:'T:SLIM X2',removed:'yes'}],{therapy_plan:'yes'},true).sources.length,1);
+assert.equal(evaluateDmiWorkflow([{...pump,model:'770G'}],{},true).sources.length,0);
+console.log('Contrôles pompes externes, retrait et continuité du traitement réussis');
+
+const {normalizeMachineProfiles}=require('./identification.js');
+const profile={centre:'Centre fictif',name:'Salle A',reference:'Notice fictive',saved_at:'2026-10-07',patient:'NE PAS STOCKER',values:{field:'1.5',gradient:'20',sar:'2',raw:'patient',bore:'horizontal_cylindrical',nucleus:'hydrogen',slew:'180'}};
+assert.equal(normalizeMachineProfiles(Array(6).fill(profile)).length,4);
+assert.equal(normalizeMachineProfiles([profile])[0].patient,undefined);
+assert.equal(normalizeMachineProfiles([profile])[0].values.sar,undefined);
+assert.equal(normalizeMachineProfiles([profile])[0].values.raw,undefined);
+assert.equal(normalizeMachineProfiles([null,{}]).length,0);
+console.log('Contrôles profils machine et exclusion des données examen réussis');

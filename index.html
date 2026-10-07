@@ -28,12 +28,12 @@
 <body>
 <header><h1>MR-DMI</h1><p>Lecture assistée des cartes et comptes rendus d'implantation</p></header>
 <main>
-  <p class="hint">Version lecture 2026-10-07.12</p>
+  <p class="hint">Version lecture 2026-10-07.13</p>
   <section id="examples">
     <h2>Tester le parcours avec un exemple fictif</h2>
     <p>Ces exemples utilisent des références techniques réelles et des paramètres fictifs. Ils testent le parcours et les contrôles ; ils ne mesurent pas la fiabilité de lecture d’une carte patient.</p>
     <label for="example-case">Exemple à charger</label>
-    <select id="example-case"><option value="cardiac">Cardiaque — boîtier et sonde identifiés à 1,5 T</option><option value="neuro">Neurostimulateur — champ 3 T hors de la fiche intégrée</option><option value="unknown">Dispositif inconnu — informations à compléter</option></select>
+    <select id="example-case"><option value="cardiac">Cardiaque — boîtier et sonde identifiés à 1,5 T</option><option value="neuro">Neurostimulateur — champ 3 T hors de la fiche intégrée</option><option value="cochlear">Cochlear CI612 — SAR tête dépassé à 3 T</option><option value="pump">MiniMed 780G — retrait non réalisé</option><option value="unknown">Dispositif inconnu — informations à compléter</option></select>
     <button id="load-example" type="button">Charger et vérifier l’exemple fictif</button>
     <button id="clear-example" type="button">Effacer les données de l’exemple</button>
     <p id="example-status" class="notice" hidden></p>
@@ -106,15 +106,34 @@
     <button id="add-component" type="button">Ajouter un composant</button>
     <button id="import-components" type="button">Importer les références lues</button>
     <label for="complete-inventory">Tous les dispositifs et composants présents sont-ils répertoriés ?</label><select id="complete-inventory"><option value="unknown">Non confirmé</option><option value="no">Non — informations manquantes</option><option value="yes">Oui — inventaire vérifié</option></select>
+    <details id="centre-settings"><summary>Mon centre et mes machines (sur cet appareil)</summary>
+      <p>Enregistrez jusqu’à quatre profils de machines. Renseignez leurs caractéristiques à partir de la documentation du constructeur correspondant à la configuration installée. Les limites du protocole et les données du patient ne sont pas enregistrées.</p>
+      <label for="centre-name">Nom du centre</label><input id="centre-name" maxlength="80" autocomplete="off">
+      <label for="profile-name">Nom du profil machine</label><input id="profile-name" maxlength="80" placeholder="Ex. Siemens Altea — salle 1" autocomplete="off">
+      <label for="profile-reference">Référence et version du document machine</label><input id="profile-reference" maxlength="160" autocomplete="off">
+      <button id="save-machine" type="button">Enregistrer les caractéristiques machine saisies ci-dessous</button>
+      <label for="saved-machine">Profil enregistré</label><select id="saved-machine"><option value="">Choisir un profil</option></select>
+      <button id="load-machine" type="button">Appliquer le profil machine</button>
+      <button id="delete-machine" type="button">Supprimer le profil sélectionné</button>
+      <p id="profile-status" aria-live="polite"></p>
+    </details>
     <details id="workflow-exam"><summary>Paramètres de l’examen pour l’équipe IRM</summary>
       <label for="workflow-field">Champ réellement envisagé (T)</label><select id="workflow-field"><option value="">À confirmer</option><option value="1.5">1,5 T</option><option value="3">3 T</option><option value="0.55">0,55 T</option></select>
       <label for="workflow-mode">Mode de fonctionnement</label><select id="workflow-mode"><option value="">Non renseigné</option><option value="normal">Normal</option><option value="first">Premier niveau contrôlé</option></select>
 <label for="workflow-bore">Tunnel et orientation du champ</label><select id="workflow-bore"><option value="">Non confirmé</option><option value="horizontal_cylindrical">Cylindrique horizontal</option><option value="other">Autre configuration</option></select>
 <label for="workflow-nucleus">Noyau exploré</label><select id="workflow-nucleus"><option value="">Non confirmé</option><option value="hydrogen">Hydrogène (¹H)</option><option value="other">Autre noyau</option></select>
-<label for="workflow-position">Position prévue du patient</label><select id="workflow-position"><option value="">Non confirmé</option><option value="supine_arms_sides">Décubitus dorsal, bras le long du corps</option><option value="other">Autre position</option></select>
+<label for="workflow-position">Position prévue du patient</label><select id="workflow-position"><option value="">Non confirmé</option><option value="supine">Décubitus dorsal</option><option value="supine_arms_sides">Décubitus dorsal, bras le long du corps</option><option value="other">Autre position</option></select>
 <label for="workflow-implant-location">Implantation du boîtier cardiaque</label><select id="workflow-implant-location"><option value="">Non confirmé</option><option value="pectoral">Pectorale droite ou gauche</option><option value="other">Autre site</option></select>
 <label for="workflow-coil">Antenne RF émettrice (à distinguer de la réception)</label><select id="workflow-coil"><option value="">Non confirmé</option><option value="body">Antenne corps intégrée</option><option value="local_head">Antenne locale émission/réception tête</option><option value="local_upper">Antenne locale émission/réception membre supérieur</option><option value="local_lower">Antenne locale émission/réception membre inférieur</option><option value="other">Autre antenne émettrice</option></select>
 <label for="workflow-polarization">Polarisation RF à l’émission</label><select id="workflow-polarization"><option value="">Non confirmé</option><option value="cp">Circulaire (CP)</option><option value="other">Autre mode d’émission</option></select>
+<label for="workflow-head-sar-reported">La console indique-t-elle le SAR moyen tête ?</label><select id="workflow-head-sar-reported"><option value="">À confirmer</option><option value="yes">Oui</option><option value="no">Non</option></select>
+<label for="workflow-head-sar">SAR moyen tête maximal prévu (W/kg)</label><input id="workflow-head-sar" type="number" min="0" step="any">
+<label for="workflow-body-sar">SAR moyen corps entier maximal prévu (W/kg)</label><input id="workflow-body-sar" type="number" min="0" step="any">
+<label for="workflow-landmark">Repère d’acquisition pour le contrôle Cochlear</label><select id="workflow-landmark"><option value="">À confirmer</option><option value="far">Plus de 40 cm du dessus de la tête</option><option value="near_below_t1">Au plus 40 cm du dessus de la tête ET inférieur à T1</option><option value="other">Autre repère / non couvert par ce tableau</option></select>
+<label for="workflow-head-angle">Écart maximal prévu de la tête par rapport à l’axe Z (degrés)</label><input id="workflow-head-angle" type="number" min="0" step="any">
+<label for="workflow-external-removed">Éléments externes auditifs retirés avant la salle ?</label><select id="workflow-external-removed"><option value="">À confirmer</option><option value="yes">Oui</option><option value="no">Non</option></select>
+<label for="workflow-artifact-reviewed">Valeur diagnostique malgré les artefacts évaluée par l’équipe ?</label><select id="workflow-artifact-reviewed"><option value="">À confirmer</option><option value="yes">Oui</option><option value="no">Non</option></select>
+<label for="workflow-therapy-plan">Continuité de l’insulinothérapie organisée par l’équipe soignante ?</label><select id="workflow-therapy-plan"><option value="">À confirmer</option><option value="yes">Oui</option><option value="no">Non</option></select>
       <label for="workflow-gradient">Gradient spatial B0 de la machine (T/m)</label><input id="workflow-gradient" type="number" min="0" step="any">
       <label for="workflow-slew">Slew rate par axe de la machine (T/m/s)</label><input id="workflow-slew" type="number" min="0" step="any">
       <label for="workflow-duration">Temps actif total prévu de la séance (min)</label><input id="workflow-duration" type="number" min="0" step="any">
@@ -287,6 +306,7 @@
     const terms=[...identifiers.makers,...identifiers.models].filter(t=>!identifiers.serials.includes(t));
     $('documents').replaceChildren();$('terms').value=terms.join(' ');
     $('manufacturer-parameters').textContent='Conditions IRM non établies : référence exacte de chaque composant et notice applicable à confirmer.';
+    if(identifiers.models.length&&!componentRows.length)$('import-components').click();
     if(terms.length)$('search-docs').click();
   });
   $('search-model').addEventListener('click',async()=>{
@@ -313,7 +333,7 @@
   });
   $('lookup').addEventListener('click',async()=>{
     const q=$('udi').value.trim(),out=$('result');out.replaceChildren();
-    if(!q){out.textContent='Saisissez un UDI-DI vérifié sur la carte.';return;}
+    if(!/^[0-9]{14}$/.test(q)){out.textContent='Renseignez uniquement le DI GS1 à 14 chiffres, sans numéro de série ni donnée patient.';return;}
     $('lookup').disabled=true;out.textContent='Recherche en cours…';
     try{
       const response=await fetch('/api/device?q='+encodeURIComponent(q));
@@ -345,7 +365,8 @@
         const a=document.createElement('a');a.href=item.source_url;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Source officielle ('+item.source_type+')';
         box.append(title,p,a);out.append(box);
       }
-      $('manufacturer-parameters').textContent='Sources documentaires retrouvées ; correspondance indicative. Aucun réglage machine n’est déduit : la référence exacte et la notice IRM applicable restent à confirmer.';
+      const exact=data.results.filter(item=>item.exact_models);
+      $('manufacturer-parameters').textContent=exact.length?'Notices répertoriées pour les références recherchées : '+exact.map(item=>item.name+' ('+(item.document_version||item.region)+')').join(' ; ')+'. Dans le dossier ci-dessous, confirmez les composants pour afficher les contrôles automatiques intégrés.':'Sources générales retrouvées. Aucun résumé technique exact intégré pour cette recherche ; référence et notice à confirmer.';
       const gudid=document.createElement('a');gudid.href='https://accessgudid.nlm.nih.gov/devices/search?query='+encodeURIComponent(q);gudid.target='_blank';gudid.rel='noopener noreferrer';gudid.textContent='Recherche complémentaire AccessGUDID (catalogue américain, identification seulement)';out.append(gudid);
     }catch(e){out.textContent='Recherche indisponible : '+e.message;}
   });
@@ -379,7 +400,7 @@
     invalidateReport();
     const box=document.createElement('fieldset');box.className='result';
     const title=document.createElement('legend');title.textContent='Composant '+(componentRows.length+1);box.append(title);
-    const fields={};
+    const fields={},conditionalWraps=[];
     for(const [key,label] of [['system','Système associé (même numéro pour boîtier et sondes)'],['category','Type'],['maker','Fabricant du composant'],['model','Référence du composant'],['length_cm','Longueur (cm), si applicable']]){
       const wrap=document.createElement('label');wrap.textContent=label;
       const input=document.createElement(key==='category'?'select':'input');input.autocomplete='off';
@@ -388,6 +409,11 @@
       input.value=seed[key]|| (key==='category'?'other':key==='system'?'1':'');wrap.append(input);box.append(wrap);fields[key]=input;
       input.addEventListener('input',invalidateReport);input.addEventListener('change',invalidateReport);
     }
+    for(const [key,label,options] of [['removed','Pompe externe et éléments associés retirés (si applicable)',[['','Non confirmé'],['yes','Oui'],['no','Non']]],['magnet','Aimant auditif (si applicable)',[['','Non confirmé'],['present','En place'],['removed','Retiré chirurgicalement']]],['mri_kit','Kit IRM Cochlear appliqué (si requis)',[['','Non confirmé'],['yes','Oui'],['no','Non']]]]){
+      const wrap=document.createElement('label');wrap.textContent=label;const input=document.createElement('select');
+      for(const [value,text] of options){const o=document.createElement('option');o.value=value;o.textContent=text;input.append(o);}input.value=seed[key]||'';wrap.append(input);box.append(wrap);fields[key]=input;conditionalWraps.push([key,wrap]);input.addEventListener('change',invalidateReport);
+    }
+    const updateFields=()=>{for(const [key,wrap] of conditionalWraps)wrap.hidden=fields.category.value!==(key==='removed'?'pump':'cochlear');};fields.category.addEventListener('change',updateFields);updateFields();
     const checkWrap=document.createElement('label');const check=document.createElement('input');check.type='checkbox';check.style.width='auto';checkWrap.append(check,document.createTextNode(' Référence vérifiée sur la carte complète ou la traçabilité'));box.append(checkWrap);fields.confirmed=check;check.addEventListener('change',()=>{invalidateReport();});
     const remove=document.createElement('button');remove.type='button';remove.textContent='Retirer ce composant';remove.addEventListener('click',()=>{const i=componentRows.findIndex(r=>r.box===box);if(i>=0)componentRows.splice(i,1);box.remove();invalidateReport();componentRows.forEach((r,i)=>r.box.querySelector('legend').textContent='Composant '+(i+1));});box.append(remove);
     componentRows.push({box,fields});$('components').append(box);
@@ -400,27 +426,61 @@
     if(!ids.models.length){$('workflow-result').textContent='Aucune référence lue : ajoutez les composants à partir de la traçabilité.';return;}
     for(const model of ids.models){
       const exists=componentRows.some(r=>r.fields.model.value===model);if(exists)continue;
-      const category=ids.families.includes(model)||/^(2088TC|1944|1948)/i.test(model)?'lead':/^CI\d/i.test(model)?'cochlear':/^OMNIPOD/i.test(model)?'pump':/^PM|^A\d/i.test(model)?'cardiac':'other';
+      const category=ids.families.includes(model)||/^(2088TC|1944|1948)/i.test(model)?'lead':/^CI\d/i.test(model)?'cochlear':/^(OMNIPOD|780G|MINIMED|T:SLIM|TSLIM)/i.test(model)?'pump':/^PM|^A\d/i.test(model)?'cardiac':'other';
       addComponent({model,maker:ids.makers.length===1?ids.makers[0]:'',category});
     }
     $('workflow-result').textContent='Références importées sans confirmation. Un nom identique peut désigner plusieurs composants : ajoutez chaque exemplaire et vérifiez les associations.';
   });
+  const machineKeys=['field','bore','nucleus','gradient','slew'];
+  let machineProfiles=[],selectedMachine='';
+  function renderProfiles(){
+    const select=$('saved-machine');select.replaceChildren();const empty=document.createElement('option');empty.value='';empty.textContent='Choisir un profil';select.append(empty);
+    machineProfiles.forEach((profile,index)=>{const o=document.createElement('option');o.value=String(index);o.textContent=profile.centre+' — '+profile.name;select.append(o);});
+  }
+  try{const saved=JSON.parse(localStorage.getItem('mrdmi-machine-profiles-v1')||'[]');machineProfiles=normalizeMachineProfiles(saved);}catch(error){$('profile-status').textContent='Profils indisponibles sur cet appareil.';}
+  renderProfiles();
+  function persistProfiles(){try{localStorage.setItem('mrdmi-machine-profiles-v1',JSON.stringify(machineProfiles));return true;}catch(error){$('profile-status').textContent='Enregistrement impossible sur cet appareil.';return false;}}
+  $('save-machine').addEventListener('click',()=>{
+    const centre=$('centre-name').value.trim(),name=$('profile-name').value.trim(),reference=$('profile-reference').value.trim();
+    if(!centre||!name||!reference){$('profile-status').textContent='Renseignez centre, nom et référence documentaire.';return;}
+    if(!$('workflow-field').value){$('profile-status').textContent='Confirmez le champ de la machine avant enregistrement.';return;}
+    const existing=machineProfiles.findIndex(x=>x.centre===centre&&x.name===name);
+    if(existing<0&&machineProfiles.length>=4){$('profile-status').textContent='Quatre profils maximum. Supprimez un profil ou réutilisez son nom pour le mettre à jour.';return;}
+    const profile={centre,name,reference,saved_at:new Date().toISOString(),values:Object.fromEntries(machineKeys.map(key=>[key,$('workflow-'+key).value]))};
+    const previous=machineProfiles.slice();if(existing>=0)machineProfiles[existing]=profile;else machineProfiles.push(profile);
+    if(!persistProfiles()){machineProfiles=previous;return;}renderProfiles();$('profile-status').textContent='Profil enregistré sur cet appareil. Les paramètres d’exposition restent à définir pour chaque examen.';
+  });
+  $('load-machine').addEventListener('click',()=>{
+    const value=$('saved-machine').value,profile=value===''?null:machineProfiles[Number(value)];if(!profile){$('profile-status').textContent='Sélectionnez un profil.';return;}
+    if(demoMode)clearExample();else invalidateReport();
+    for(const key of ['mode','coil','polarization','head-sar-reported','head-sar','body-sar'])$('workflow-'+key).value='';
+    selectedMachine=profile.centre+' — '+profile.name+' — '+profile.reference+' — enregistré '+profile.saved_at;
+    for(const key of machineKeys)$('workflow-'+key).value=profile.values[key]||'';
+    $('centre-name').value=profile.centre;$('profile-name').value=profile.name;$('profile-reference').value=profile.reference;
+    $('workflow-exam').open=true;$('profile-status').textContent='Profil appliqué. Ajouter les implants et confirmer les paramètres d’exposition du nouvel examen.';
+  });
+  $('delete-machine').addEventListener('click',()=>{
+    const value=$('saved-machine').value;if(value===''){return;}const previous=machineProfiles.slice();machineProfiles.splice(Number(value),1);if(!persistProfiles()){machineProfiles=previous;return;}renderProfiles();$('profile-status').textContent='Profil supprimé de cet appareil.';
+  });
+  for(const key of machineKeys)for(const event of ['input','change'])$('workflow-'+key).addEventListener(event,()=>{selectedMachine='';});
   $('role').addEventListener('change',()=>{invalidateReport();$('workflow-exam').hidden=$('role').value!=='technologist';});
-  for(const id of ['complete-inventory','workflow-field','workflow-mode','workflow-gradient','workflow-slew','workflow-duration','workflow-wait','workflow-bore','workflow-nucleus','workflow-position','workflow-implant-location','workflow-coil','workflow-polarization']){ $(id).addEventListener('input',invalidateReport);$(id).addEventListener('change',invalidateReport); }
+  for(const id of ['complete-inventory','workflow-field','workflow-mode','workflow-gradient','workflow-slew','workflow-duration','workflow-wait','workflow-bore','workflow-nucleus','workflow-position','workflow-implant-location','workflow-coil','workflow-polarization','workflow-head-sar-reported','workflow-head-sar','workflow-body-sar','workflow-landmark','workflow-head-angle','workflow-external-removed','workflow-artifact-reviewed','workflow-therapy-plan']){ $(id).addEventListener('input',invalidateReport);$(id).addEventListener('change',invalidateReport); }
   $('evaluate-workflow').addEventListener('click',()=>{
     const number=id=>$(id).value===''?null:Number($(id).value);
     const components=getComponents();
-    const exam={field_t:number('workflow-field'),spatial_gradient_t_m:number('workflow-gradient'),gradient_slew_t_m_s:number('workflow-slew'),total_active_min:number('workflow-duration'),wait_min:number('workflow-wait'),mode:$('workflow-mode').value,bore:$('workflow-bore').value,nucleus:$('workflow-nucleus').value,position:$('workflow-position').value,implant_location:$('workflow-implant-location').value,transmit_coil:$('workflow-coil').value,rf_polarization:$('workflow-polarization').value};
+    const exam={field_t:number('workflow-field'),spatial_gradient_t_m:number('workflow-gradient'),gradient_slew_t_m_s:number('workflow-slew'),total_active_min:number('workflow-duration'),wait_min:number('workflow-wait'),mode:$('workflow-mode').value,bore:$('workflow-bore').value,nucleus:$('workflow-nucleus').value,position:$('workflow-position').value,implant_location:$('workflow-implant-location').value,transmit_coil:$('workflow-coil').value,rf_polarization:$('workflow-polarization').value,head_sar_reported:$('workflow-head-sar-reported').value,head_sar_wkg:number('workflow-head-sar'),body_sar_wkg:number('workflow-body-sar'),landmark:$('workflow-landmark').value,head_angle_deg:number('workflow-head-angle'),external_removed:$('workflow-external-removed').value,artifact_reviewed:$('workflow-artifact-reviewed').value,therapy_plan:$('workflow-therapy-plan').value};
     const evaluation=evaluateDmiWorkflow(components,exam,$('complete-inventory').value==='yes');
     const out=$('workflow-result');out.replaceChildren();
     const p=text=>{const el=document.createElement('p');el.textContent=text;out.append(el);};
-    p('MR-DMI — synthèse technique — version 2026-10-07.12 — '+new Date().toLocaleString('fr-FR'));
+    p('MR-DMI — synthèse technique — version 2026-10-07.13 — '+new Date().toLocaleString('fr-FR'));
     if(demoMode)p('EXEMPLE FICTIF — aucune donnée patient — paramètres de démonstration.');
     p('Vérification partielle ; aucune autorisation d’examen.');
     p(evaluation.status);
-    for(const [i,c] of components.entries())p('Composant '+(i+1)+' — système '+c.system+' — '+c.category+' — '+c.maker+' '+c.model+(c.length_cm?' — '+c.length_cm+' cm':'')+' — référence '+(c.confirmed?'confirmée':'non confirmée'));
+    for(const [i,c] of components.entries())p('Composant '+(i+1)+' — système '+c.system+' — '+c.category+' — '+c.maker+' '+c.model+(c.length_cm?' — '+c.length_cm+' cm':'')+(c.category==='pump'?' — retrait '+(c.removed||'inconnu'):'')+(c.category==='cochlear'?' — aimant '+(c.magnet||'inconnu')+' — kit '+(c.mri_kit||'inconnu'):'')+' — référence '+(c.confirmed?'confirmée':'non confirmée'));
+    if(selectedMachine)p('Machine : '+selectedMachine);
     p('Inventaire complet : '+$('complete-inventory').selectedOptions[0].textContent);
     if($('role').value==='technologist')p('Paramètres envisagés : champ '+(exam.field_t||'inconnu')+' T ; mode '+(exam.mode||'inconnu')+' ; gradient '+(exam.spatial_gradient_t_m??'inconnu')+' T/m ; slew rate '+(exam.gradient_slew_t_m_s??'inconnu')+' T/m/s ; temps actif '+(exam.total_active_min??'inconnu')+' min ; attente '+(exam.wait_min??'inconnu')+' min.');
+    if($('role').value==='technologist')p('Contrôles complémentaires saisis : '+['bore','nucleus','position','implant-location','coil','polarization','head-sar-reported','head-sar','body-sar','landmark','head-angle','external-removed','artifact-reviewed','therapy-plan'].map(key=>{const el=$('workflow-'+key);return document.querySelector('label[for="workflow-'+key+'"]').textContent+' : '+(el.value?(el.selectedOptions?.[0]?.textContent||el.value):'inconnu');}).join(' ; '));
     p('Parcours : '+$('role').selectedOptions[0].textContent+' — France / Union européenne');
     for(const task of dmiRoleTasks($('role').value,components))p('• '+task);
     for(const missing of evaluation.missing)p('À compléter : '+missing);
@@ -436,20 +496,22 @@
   });
 
   function clearExample(){
-    demoMode=false;invalidateReport();componentRows.splice(0);$('components').replaceChildren();
+    demoMode=false;selectedMachine='';invalidateReport();componentRows.splice(0);$('components').replaceChildren();
     $('complete-inventory').value='unknown';
-    for(const id of ['workflow-field','workflow-mode','workflow-gradient','workflow-slew','workflow-duration','workflow-wait','workflow-bore','workflow-nucleus','workflow-position','workflow-implant-location','workflow-coil','workflow-polarization'])$(id).value='';
+    for(const id of ['workflow-field','workflow-mode','workflow-gradient','workflow-slew','workflow-duration','workflow-wait','workflow-bore','workflow-nucleus','workflow-position','workflow-implant-location','workflow-coil','workflow-polarization','workflow-head-sar-reported','workflow-head-sar','workflow-body-sar','workflow-landmark','workflow-head-angle','workflow-external-removed','workflow-artifact-reviewed','workflow-therapy-plan'])$(id).value='';
     $('example-status').hidden=true;
   }
   $('clear-example').addEventListener('click',clearExample);
   $('load-example').addEventListener('click',()=>{
     clearExample();demoMode=true;$('role').value='technologist';$('workflow-exam').hidden=false;$('workflow-exam').open=true;
     const selected=$('example-case').value;
-    const components=selected==='cardiac'?[{system:'1',category:'cardiac',maker:'Abbott',model:'PM2272'},{system:'1',category:'lead',maker:'Abbott',model:'2088TC',length_cm:52}]:selected==='neuro'?[{system:'1',category:'neuro',maker:'Abbott',model:'3660'},{system:'1',category:'lead',maker:'Abbott',model:'3186',length_cm:60}]:[{system:'1',category:'other',maker:'Fabricant à préciser',model:'Référence inconnue'}];
+    const components=selected==='cardiac'?[{system:'1',category:'cardiac',maker:'Abbott',model:'PM2272'},{system:'1',category:'lead',maker:'Abbott',model:'2088TC',length_cm:52}]:selected==='neuro'?[{system:'1',category:'neuro',maker:'Abbott',model:'3660'},{system:'1',category:'lead',maker:'Abbott',model:'3186',length_cm:60}]:selected==='cochlear'?[{system:'1',category:'cochlear',maker:'Cochlear',model:'CI612',magnet:'present'}]:selected==='pump'?[{system:'1',category:'pump',maker:'Medtronic',model:'780G',removed:'no'}]:[{system:'1',category:'other',maker:'Fabricant à préciser',model:'Référence inconnue'}];
     for(const c of components){addComponent(c);componentRows[componentRows.length-1].fields.confirmed.checked=selected!=='unknown';}
     $('complete-inventory').value=selected==='unknown'?'unknown':'yes';
-    $('workflow-field').value=selected==='neuro'?'3':'1.5';$('workflow-mode').value='normal';$('workflow-gradient').value='20';$('workflow-slew').value='180';$('workflow-duration').value='20';$('workflow-wait').value='30';
-    $('example-status').hidden=false;$('example-status').textContent='EXEMPLE FICTIF chargé. Résultat attendu : '+(selected==='neuro'?'champ non conforme au résumé intégré.':selected==='unknown'?'références non confirmées, conditions inconnues.':'limites numériques citées respectées ; évaluation encore incomplète, notice France et restrictions restantes à vérifier.');
+    $('workflow-field').value=['neuro','cochlear'].includes(selected)?'3':'1.5';$('workflow-mode').value='normal';$('workflow-gradient').value='20';$('workflow-slew').value='180';$('workflow-duration').value='20';$('workflow-wait').value='30';
+    if(selected==='cochlear'){for(const [id,value] of Object.entries({'workflow-bore':'horizontal_cylindrical','workflow-nucleus':'hydrogen','workflow-position':'supine','workflow-polarization':'cp','workflow-head-sar-reported':'yes','workflow-head-sar':'2','workflow-head-angle':'0','workflow-external-removed':'yes','workflow-artifact-reviewed':'yes'}))$(id).value=value;}
+    if(selected==='pump')$('workflow-therapy-plan').value='yes';
+    $('example-status').hidden=false;$('example-status').textContent='EXEMPLE FICTIF chargé. Résultat attendu : '+(selected==='cochlear'?'SAR moyen tête non conforme au résumé intégré.':selected==='pump'?'retrait non réalisé, préparation non conforme.':selected==='neuro'?'champ non conforme au résumé intégré.':selected==='unknown'?'références non confirmées, conditions inconnues.':'limites numériques citées respectées ; évaluation encore incomplète, notice France et restrictions restantes à vérifier.');
     $('evaluate-workflow').click();$('workflow').scrollIntoView({behavior:'smooth',block:'start'});
   });
 </script>

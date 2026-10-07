@@ -32,3 +32,10 @@ class IdentificationTests(unittest.TestCase):
             self.assertEqual(response.status_code,200)
 
 if __name__=='__main__': unittest.main()
+
+
+class BrandPunctuationTests(unittest.TestCase):
+ def test_colon_in_quoted_model_is_allowed_but_quote_injection_is_not(self):
+  from urllib.parse import parse_qs
+  self.assertIn('"t:slim X2"',parse_qs(model_query('Tandem','t:slim X2'))['search'][0])
+  with self.assertRaises(ValueError):model_query('Tandem','X2" OR company_name:*')

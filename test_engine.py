@@ -42,3 +42,10 @@ class DocumentaryEngineTests(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main()
 
+
+class ExactNoticeTests(unittest.TestCase):
+ def test_model_retrieves_document_but_maker_does_not(self):
+  self.assertIn('cochlear-nucleus-emea-2024',[x['id'] for x in search_catalog('Cochlear CI612')])
+  self.assertNotIn('cochlear-nucleus-emea-2024',[x['id'] for x in search_catalog('Cochlear')])
+  self.assertNotIn('cochlear-nucleus-emea-2024',[x['id'] for x in search_catalog('Cochlear CI6120')])
+  self.assertIn('abbott-pacing-2022',[x['id'] for x in search_catalog('Abbott PM2272')])
