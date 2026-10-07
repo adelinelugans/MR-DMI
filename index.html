@@ -108,12 +108,27 @@
     file=e.target.files[0];$('read').disabled=!file;
     if(objectUrl)URL.revokeObjectURL(objectUrl);
     $('preview').hidden=true;
+    $('raw').value='';$('ocr-status').textContent='';$('evidence').hidden=true;
+    $('maker').value='';$('model').value='';$('udi').value='';$('terms').value='';
+    $('result').replaceChildren();$('documents').replaceChildren();
     $('selected-file').textContent=file?'Fichier choisi : '+file.name:'';
     if(file && file.type.startsWith('image/')){objectUrl=URL.createObjectURL(file);$('preview').src=objectUrl;$('preview').hidden=false;}
   };
   $('camera').addEventListener('change',selectFile);
   $('document').addEventListener('change',selectFile);
-  async function readPdf(file,worker){
+  function ocrErrorMessage(error){
+    const detail=typeof error==='string'?error:(error && error.message)||'';
+    return detail && detail!=='undefined' ? detail : 'Le moteur de lecture a échoué sans préciser la cause. Vérifiez la connexion Internet puis réessayez. Vous pouvez aussi coller le texte du document.';
+  }
+  async function createOcrWorker(){
+    if(!window.Tesseract)throw Error('Le moteur OCR n’a pas chargé. Vérifiez la connexion Internet puis rechargez la page.');
+    return Tesseract.createWorker('fra+eng',1,{
+      logger:progress=>{
+        $('ocr-status').textContent='Lecture : '+(progress.status||'préparation')+(Number.isFinite(progress.progress)?' — '+Math.round(progress.progress*100)+' %':'');
+      }
+    });
+  }
+  async function readPdf(file,getWorker){
     if(!window.pdfjsLib)throw Error('Le lecteur PDF n’a pas chargé. Vérifiez la connexion Internet.');
     pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
@@ -127,7 +142,7 @@
         const viewport=page.getViewport({scale:2}), canvas=document.createElement('canvas');
         canvas.width=viewport.width;canvas.height=viewport.height;
         await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
-        lines=(await worker.recognize(canvas)).data.text;
+        lines=(await (await getWorker()).recognize(canvas)).data.text;
       }
       pages.push(lines);
     }
@@ -137,22 +152,20 @@
     if(!file)return;
     $('read').disabled=true;$('ocr-status').textContent='Lecture en cours…';
     let worker;
+    const getWorker=async()=>worker||(worker=await createOcrWorker());
     try{
       if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){
-        if(!window.Tesseract)throw Error('Le moteur OCR n’a pas chargé. Vérifiez la connexion Internet.');
-        worker=await Tesseract.createWorker('fra+eng');
-        $('raw').value=await readPdf(file,worker);
+        $('raw').value=await readPdf(file,getWorker);
       }else if(file.type==='text/plain'||/\.txt$/i.test(file.name)){
         $('raw').value=await file.text();
       }else if(file.type.startsWith('image/')){
-        if(!window.Tesseract)throw Error('Le moteur OCR n’a pas chargé. Vérifiez la connexion Internet.');
-        worker=await Tesseract.createWorker('fra+eng');
-        $('raw').value=(await worker.recognize(file)).data.text;
+        $('raw').value=(await (await getWorker()).recognize(file)).data.text;
       }else throw Error('Choisissez une image, un PDF ou un fichier texte.');
+      if(!$('raw').value.trim())throw Error('Aucun texte lisible détecté. Prenez une photo nette, de face et rapprochée, ou collez le texte du document.');
       $('analyze').click();
       $('ocr-status').textContent='Lecture terminée. Corrigez les références avant la recherche.';
-    }catch(err){$('ocr-status').textContent='Lecture impossible : '+err.message;}
-    finally{if(worker)await worker.terminate();$('read').disabled=false;}
+    }catch(err){$('ocr-status').textContent='Lecture impossible : '+ocrErrorMessage(err);}
+    finally{try{if(worker)await worker.terminate();}catch(error){console.warn('OCR cleanup failed');}finally{$('read').disabled=!file;}}
   });
   $('analyze').addEventListener('click',()=>{
     const s=$('raw').value, out=$('evidence');
