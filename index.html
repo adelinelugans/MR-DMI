@@ -53,6 +53,8 @@
     <label for="udi">Identifiant de dispositif (UDI-DI), si présent</label>
     <input id="udi" inputmode="text" autocomplete="off" placeholder="Ex. 00848486001414">
     <p class="hint">Ne recopiez pas un numéro de séjour, une date, une taille de valve, un numéro de série ou un lot dans ce champ. La recherche automatique ne couvre pas tous les implants européens ni ceux posés avant l'UDI.</p>
+    <button id="search-model" type="button">Rechercher par fabricant et modèle</button>
+    <p class="hint">Numéro de série seul : identification publique non garantie. Pour un pacemaker, vérifiez aussi chaque sonde. Les résultats du catalogue américain sont des candidats à confirmer.</p>
     <button id="lookup" type="button">Rechercher l'UDI-DI</button>
     <div id="result" aria-live="polite"></div>
   </section>
@@ -87,6 +89,7 @@
 </main>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="/identification.js"></script>
 <script>
   const $=id=>document.getElementById(id);
   if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
@@ -152,10 +155,17 @@
     finally{if(worker)await worker.terminate();$('read').disabled=false;}
   });
   $('analyze').addEventListener('click',()=>{
-    const s=$('raw').value, out=$('evidence');out.replaceChildren();out.hidden=false;
+    const s=$('raw').value, out=$('evidence');
+    const identifiers=extractIdentifiers(s);
+    $('maker').value=identifiers.makers.length===1?identifiers.makers[0]:'';
+    $('model').value=identifiers.models.length===1?identifiers.models[0]:'';
+    $('udi').value=identifiers.udi;
+    $('result').replaceChildren();out.replaceChildren();out.hidden=false;
     const lines=s.split(/\n/).map(x=>x.trim()).filter(Boolean);
     const relevant=lines.filter(x=>/\b(ATS|Bentall|valve|proth[eè]se|greffon|implant|mod[eè]le|r[eé]f[eé]rence)\b/i.test(x));
     const add=(label,value)=>{const p=document.createElement('p'),b=document.createElement('strong');b.textContent=label+' ';p.append(b,document.createTextNode(value));out.append(p);};
+    if(identifiers.makers.length)add('Fabricants repérés :',identifiers.makers.join(', ')+' — à confirmer.');
+    if(identifiers.models.length)add('Références repérées :',identifiers.models.join(', ')+' — à confirmer, plusieurs composants possibles.');
     if(/\bATS\b/i.test(s))add('Mention lue :','ATS (à confirmer sur le document original).');
     if(/\bBentall\b/i.test(s))add('Intervention lue :','Bentall ; vérifier séparément la valve et le conduit/greffon éventuel.');
     const size=s.match(/\bATS\s*(?:n[°o.]?\s*)?(\d{2})\b/i);
@@ -163,8 +173,30 @@
     if(relevant.length){add('Lignes à relire :',relevant.slice(0,5).join(' | '));}
     else add('Aucun indice reconnu :','Relisez le document et cherchez le compte rendu complet ou l’étiquette de traçabilité.');
     add('Statut :','référence exacte et conditions IRM non établies. Chercher la notice du fabricant pour le modèle confirmé, puis faire valider selon le protocole du service.');
-    const terms=['ATS','Bentall','Medtronic','Open Pivot'].filter(t=>s.toLowerCase().includes(t.toLowerCase()));
+    const terms=[...identifiers.makers,'ATS','Bentall','Open Pivot'].filter(t=>s.toLowerCase().includes(t.toLowerCase()));
     if(terms.length){$('terms').value=terms.join(' ');$('search-docs').click();}
+  });
+  $('search-model').addEventListener('click',async()=>{
+    const out=$('result');out.replaceChildren();$('search-model').disabled=true;
+    out.textContent='Recherche du fabricant et du modèle…';
+    try{
+      const query=new URLSearchParams({maker:$('maker').value.trim(),model:$('model').value.trim()});
+      const response=await fetch('/api/search?'+query),data=await response.json();
+      if(!response.ok||!data.ok)throw Error(data.error||'Recherche indisponible');
+      out.replaceChildren();
+      const note=document.createElement('p');note.textContent=data.note;out.append(note);
+      for(const device of data.candidates){
+        const box=document.createElement('div');box.className='result';
+        const info=document.createElement('p');
+        info.textContent=[device.company,device.brand,'Modèle : '+(device.model||'non renseigné'),'Référence catalogue : '+(device.catalog_number||'non renseignée'),'Indication GUDID : '+(device.mri||'non renseignée'),device.status].join(' — ');
+        box.append(info);
+        if(device.source_url){const link=document.createElement('a');link.href=device.source_url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Fiche source GUDID';box.append(link);}
+        out.append(box);
+      }
+      if(!data.candidates.length){const p=document.createElement('p');p.textContent='Aucun candidat trouvé. Vérifiez la référence et demandez la traçabilité ou la notice au fabricant.';out.append(p);}
+      $('terms').value=$('maker').value.trim()+' '+$('model').value.trim();$('search-docs').click();
+    }catch(error){out.textContent=error.message;}
+    finally{$('search-model').disabled=false;}
   });
   $('lookup').addEventListener('click',async()=>{
     const q=$('udi').value.trim(),out=$('result');out.replaceChildren();

@@ -2,7 +2,11 @@
   {
     "id": "ats-open-pivot-family",
     "name": "ATS / Medtronic Open Pivot, valve mécanique",
-    "aliases": ["ATS", "Open Pivot", "valve mécanique ATS"],
+    "aliases": [
+      "ATS",
+      "Open Pivot",
+      "valve mécanique ATS"
+    ],
     "scope": "Famille de dispositifs ; plusieurs modèles aortiques, mitraux et conduits valvés existent. La taille 23 ne détermine pas la référence.",
     "manufacturer": "Medtronic (anciennement ATS Medical)",
     "source_url": "https://www.medtronic.com/en-us/healthcare-professionals/products/cardiovascular/heart-valves/mechanical-valves-conduits/medtronic-open-pivot-mechanical-heart-valve.html",
@@ -13,7 +17,11 @@
   {
     "id": "open-pivot-avg-family",
     "name": "Medtronic Open Pivot, conduit aortique valvé",
-    "aliases": ["Bentall", "conduit aortique valvé", "aortic valved graft"],
+    "aliases": [
+      "Bentall",
+      "conduit aortique valvé",
+      "aortic valved graft"
+    ],
     "scope": "Piste pour un Bentall ; le compte rendu et la traçabilité doivent confirmer les composants effectivement implantés.",
     "manufacturer": "Medtronic",
     "source_url": "https://www.medtronic.com/en-us/healthcare-professionals/products/cardiovascular/heart-valves/mechanical-valves-conduits/medtronic-open-pivot-aortic-valved-graft.html",
@@ -24,12 +32,64 @@
   {
     "id": "boston-imageready-model-lookup",
     "name": "Boston Scientific ImageReady, recherche de modèles de stimulation et défibrillation",
-    "aliases": ["Boston Scientific", "ImageReady", "pacemaker Boston", "défibrillateur Boston"],
+    "aliases": [
+      "Boston Scientific",
+      "ImageReady",
+      "pacemaker Boston",
+      "défibrillateur Boston"
+    ],
     "scope": "Liste fabricant des modèles de boîtiers et sondes. La compatibilité dépend de la combinaison complète et du guide technique applicable.",
     "manufacturer": "Boston Scientific",
     "source_url": "https://www.bostonscientific.com/imageready/en-US/model-lookup.html",
     "source_type": "recherche fabricant des modèles",
     "mri_conditions": null,
     "status": "piste documentaire — vérifier tout le système et son guide technique"
+  },
+  {
+    "id": "medtronic-mri-library",
+    "name": "Medtronic — bibliothèque IRM française",
+    "aliases": [
+      "Medtronic",
+      "SureScan",
+      "InterStim",
+      "SynchroMed"
+    ],
+    "manufacturer": "Medtronic",
+    "source_url": "https://manuals.medtronic.com/manuals/mri/fr_FR/home/index",
+    "scope": "Portail français : rechercher chaque référence et la notice applicable au système complet.",
+    "source_type": "portail fabricant ; notice exacte à rechercher",
+    "mri_conditions": null,
+    "status": "piste documentaire — aucune condition attribuée au patient"
+  },
+  {
+    "id": "abbott-mri-library",
+    "name": "Abbott — ressources IRM cardiovasculaires",
+    "aliases": [
+      "Abbott",
+      "St Jude",
+      "Assurity",
+      "Endurity",
+      "Tendril"
+    ],
+    "manufacturer": "Abbott",
+    "source_url": "https://www.cardiovascular.abbott/us/en/hcp/mri-safety.html",
+    "scope": "Portail américain : vérifier les références, le pays et le manuel applicable au boîtier et aux sondes.",
+    "source_type": "portail fabricant ; notice exacte à rechercher",
+    "mri_conditions": null,
+    "status": "piste documentaire — aucune condition attribuée au patient"
+  },
+  {
+    "id": "biotronik-system-check",
+    "name": "BIOTRONIK — ProMRI SystemCheck",
+    "aliases": [
+      "Biotronik",
+      "ProMRI"
+    ],
+    "manufacturer": "BIOTRONIK",
+    "source_url": "https://www.promricheck.com/",
+    "scope": "Vérifier le système complet, les sondes et le pays dans le portail fabricant.",
+    "source_type": "portail fabricant ; notice exacte à rechercher",
+    "mri_conditions": null,
+    "status": "piste documentaire — aucune condition attribuée au patient"
   }
 ]
