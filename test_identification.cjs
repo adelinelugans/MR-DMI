@@ -17,3 +17,24 @@ assert.deepEqual(extractIdentifiers('MEDel').makers,['MED-EL']);
 
 assert.deepEqual(extractIdentifiers('Modèle\nli').models,[]);
 assert.deepEqual(extractIdentifiers('N° de série\n|\nEEL414832').serialCandidates,['EEL414832']);
+
+const {evaluateDmiWorkflow,dmiRoleTasks}=require('./identification.js');
+const implant={maker:'Cochlear',model:'CI632',category:'cochlear',confirmed:true};
+assert.equal(evaluateDmiWorkflow([implant],{field_t:3},true).blocked,false);
+assert.match(evaluateDmiWorkflow([implant],{field_t:3},true).status,/incomplète/);
+assert.equal(evaluateDmiWorkflow([implant],{field_t:.55},true).blocked,true);
+assert.equal(evaluateDmiWorkflow([{...implant,confirmed:false}],{field_t:3},true).sources.length,0);
+assert.equal(evaluateDmiWorkflow([{...implant,model:'CI999'}],{field_t:3},true).sources.length,0);
+assert.ok(evaluateDmiWorkflow([implant],{},false).missing.some(x=>/Inventaire/.test(x)));
+const generator={maker:'Abbott',model:'3660',category:'neuro',confirmed:true};
+const lead={maker:'Abbott',model:'3186',category:'lead',length_cm:60,confirmed:true};
+assert.equal(evaluateDmiWorkflow([generator],{field_t:1.5},true).sources.length,0);
+assert.equal(evaluateDmiWorkflow([generator,{...lead,length_cm:90}],{field_t:1.5},true).sources.length,0);
+assert.equal(evaluateDmiWorkflow([generator,lead],{field_t:3},true).blocked,true);
+assert.equal(evaluateDmiWorkflow([generator,lead],{field_t:1.5,total_active_min:31},true).blocked,true);
+assert.equal(evaluateDmiWorkflow([generator,lead],{field_t:1.5,total_active_min:30,wait_min:29},true).blocked,true);
+assert.equal(evaluateDmiWorkflow([generator,lead,{...lead,category:'extension'}],{field_t:1.5},true).sources.length,0);
+assert.equal(evaluateDmiWorkflow([{maker:'Insulet',model:'OMNIPOD 5',category:'pump',confirmed:true}],{},true).findings[0].status,'préparation requise');
+assert.ok(dmiRoleTasks('secretary',[implant]).some(x=>/Transmettre/.test(x)));
+assert.ok(dmiRoleTasks('prescriber',[implant]).some(x=>/indication/.test(x)));
+console.log('16 contrôles de parcours, composants, sources et limites documentaires réussis');

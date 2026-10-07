@@ -27,7 +27,7 @@
 <body>
 <header><h1>MR-DMI</h1><p>Lecture assistée des cartes et comptes rendus d'implantation</p></header>
 <main>
-  <p class="hint">Version lecture 2026-10-07.3</p>
+  <p class="hint">Version lecture 2026-10-07.4</p>
   <section id="install-help">
     <h2>Installer MR-DMI sur le téléphone</h2>
     <p class="hint">Dans Chrome sur Android, ouvrez le menu ⋮ puis « Installer l’application » ou « Ajouter à l’écran d’accueil ». Vous pourrez ensuite l’ouvrir par son icône. Une connexion Internet reste nécessaire pour la recherche et la comparaison.</p>
@@ -87,6 +87,26 @@
     <div id="comparison" aria-live="polite"></div>
     </details>
   </section>
+  <section id="workflow">
+    <h2>Préparer le dossier IRM selon votre rôle</h2>
+    <label for="role">Votre rôle</label><select id="role"><option value="technologist">Manipulateur / équipe IRM</option><option value="secretary">Secrétariat — prise de rendez-vous</option><option value="prescriber">Médecin prescripteur</option></select>
+    <p class="hint">Parcours de travail local, sans connexion à un dossier patient. Le choix du rôle adapte les informations affichées ; il ne constitue pas une autorisation d’accès.</p>
+    <p class="notice">Sources fabricant et organismes officiels uniquement. Une source américaine ne suffit pas à établir les conditions applicables en France : vérifier pays, version et association exacte des composants. Aucun résumé incomplet ne valide l’examen.</p>
+    <div id="components"></div>
+    <button id="add-component" type="button">Ajouter un composant</button>
+    <button id="import-components" type="button">Importer les références lues</button>
+    <label for="complete-inventory">Tous les dispositifs et composants présents sont-ils répertoriés ?</label><select id="complete-inventory"><option value="unknown">Non confirmé</option><option value="no">Non — informations manquantes</option><option value="yes">Oui — inventaire vérifié</option></select>
+    <details id="workflow-exam"><summary>Paramètres de l’examen pour l’équipe IRM</summary>
+      <label for="workflow-field">Champ réellement envisagé (T)</label><select id="workflow-field"><option value="">À confirmer</option><option value="1.5">1,5 T</option><option value="3">3 T</option><option value="0.55">0,55 T</option></select>
+      <label for="workflow-mode">Mode de fonctionnement</label><select id="workflow-mode"><option value="">Non renseigné</option><option value="normal">Normal</option><option value="first">Premier niveau contrôlé</option></select>
+      <label for="workflow-gradient">Gradient spatial B0 de la machine (T/m)</label><input id="workflow-gradient" type="number" min="0" step="any">
+      <label for="workflow-slew">Slew rate par axe de la machine (T/m/s)</label><input id="workflow-slew" type="number" min="0" step="any">
+      <label for="workflow-duration">Temps actif total prévu de la séance (min)</label><input id="workflow-duration" type="number" min="0" step="any">
+      <label for="workflow-wait">Attente entre séances, si applicable (min)</label><input id="workflow-wait" type="number" min="0" step="any">
+    </details>
+    <button id="evaluate-workflow" type="button">Préparer le dossier et vérifier les conditions documentées</button>
+    <div id="workflow-result" class="result" aria-live="polite"></div>
+  </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -112,6 +132,7 @@
     $('raw').value='';$('ocr-status').textContent='';$('evidence').hidden=true;
     $('maker').value='';$('model').value='';$('udi').value='';$('terms').value='';
     $('result').replaceChildren();$('documents').replaceChildren();
+    $('workflow-result').replaceChildren();$('components').replaceChildren();componentRows.splice(0);$('complete-inventory').value='unknown';
     $('selected-file').textContent=file?'Fichier choisi : '+file.name:'';
     if(file && file.type.startsWith('image/')){objectUrl=URL.createObjectURL(file);$('preview').src=objectUrl;$('preview').hidden=false;}
   };
@@ -323,6 +344,58 @@
       const more=document.createElement('p');more.textContent='Toujours vérifier : '+data.missing_checks.join(' ; ');box.append(more);out.append(box);
     }catch(e){out.textContent='Comparaison impossible : '+e.message;}
   });
+  const componentTypes=[['cardiac','Boîtier cardiaque'],['lead','Sonde / électrode'],['cochlear','Implant auditif'],['neuro','Neurostimulateur'],['extension','Extension / adaptateur'],['pump','Pompe / dispositif diabète'],['other','Autre dispositif']];
+  const componentRows=[];
+  function addComponent(seed={}){
+    const box=document.createElement('fieldset');box.className='result';
+    const title=document.createElement('legend');title.textContent='Composant '+(componentRows.length+1);box.append(title);
+    const fields={};
+    for(const [key,label] of [['category','Type'],['maker','Fabricant du composant'],['model','Référence du composant'],['length_cm','Longueur (cm), si applicable']]){
+      const wrap=document.createElement('label');wrap.textContent=label;
+      const input=document.createElement(key==='category'?'select':'input');input.autocomplete='off';
+      if(key==='category')for(const [value,text] of componentTypes){const o=document.createElement('option');o.value=value;o.textContent=text;input.append(o);}
+      if(key==='length_cm'){input.type='number';input.min='0';input.step='any';}
+      input.value=seed[key]|| (key==='category'?'other':'');wrap.append(input);box.append(wrap);fields[key]=input;
+      input.addEventListener('change',()=>{$('workflow-result').replaceChildren();});
+    }
+    const checkWrap=document.createElement('label');const check=document.createElement('input');check.type='checkbox';check.style.width='auto';checkWrap.append(check,document.createTextNode(' Référence vérifiée sur la carte complète ou la traçabilité'));box.append(checkWrap);fields.confirmed=check;check.addEventListener('change',()=>{$('workflow-result').replaceChildren();});
+    const remove=document.createElement('button');remove.type='button';remove.textContent='Retirer ce composant';remove.addEventListener('click',()=>{const i=componentRows.findIndex(r=>r.box===box);if(i>=0)componentRows.splice(i,1);box.remove();$('workflow-result').replaceChildren();componentRows.forEach((r,i)=>r.box.querySelector('legend').textContent='Composant '+(i+1));});box.append(remove);
+    componentRows.push({box,fields});$('components').append(box);
+  }
+  function getComponents(){return componentRows.map(({fields})=>Object.fromEntries(Object.entries(fields).map(([k,f])=>[k,k==='confirmed'?f.checked:f.value.trim()])));}
+  $('add-component').addEventListener('click',()=>addComponent());
+  $('import-components').addEventListener('click',()=>{
+    const ids=extractIdentifiers($('raw').value);
+    if(!ids.models.length){$('workflow-result').textContent='Aucune référence lue : ajoutez les composants à partir de la traçabilité.';return;}
+    for(const model of ids.models){
+      const exists=componentRows.some(r=>r.fields.model.value===model);if(exists)continue;
+      const category=ids.families.includes(model)?'lead':/^CI\d/i.test(model)?'cochlear':/^OMNIPOD/i.test(model)?'pump':/^PM|^A\d/i.test(model)?'cardiac':'other';
+      addComponent({model,maker:ids.makers.length===1?ids.makers[0]:'',category});
+    }
+    $('workflow-result').textContent='Références importées sans confirmation. Un nom identique peut désigner plusieurs composants : ajoutez chaque exemplaire et vérifiez les associations.';
+  });
+  $('role').addEventListener('change',()=>{$('workflow-result').replaceChildren();$('workflow-exam').hidden=$('role').value!=='technologist';});
+  for(const id of ['complete-inventory','workflow-field','workflow-mode','workflow-gradient','workflow-slew','workflow-duration','workflow-wait'])$(id).addEventListener('change',()=>{$('workflow-result').replaceChildren();});
+  $('evaluate-workflow').addEventListener('click',()=>{
+    const number=id=>$(id).value===''?null:Number($(id).value);
+    const components=getComponents();
+    const exam={field_t:number('workflow-field'),spatial_gradient_t_m:number('workflow-gradient'),gradient_slew_t_m_s:number('workflow-slew'),total_active_min:number('workflow-duration'),wait_min:number('workflow-wait'),mode:$('workflow-mode').value};
+    const evaluation=evaluateDmiWorkflow(components,exam,$('complete-inventory').value==='yes');
+    const out=$('workflow-result');out.replaceChildren();
+    const p=text=>{const el=document.createElement('p');el.textContent=text;out.append(el);};
+    p(evaluation.status);p('Parcours : '+$('role').selectedOptions[0].textContent+' — France / Union européenne');
+    for(const task of dmiRoleTasks($('role').value,components))p('• '+task);
+    for(const missing of evaluation.missing)p('À compléter : '+missing);
+    for(const record of evaluation.sources){
+      const box=document.createElement('div');box.className='result';
+      const t=document.createElement('p');t.textContent='Résumé documentaire : '+record.maker+' '+components[record.component].model+' — '+record.region+' — consulté le '+record.reviewed;
+      const note=document.createElement('p');note.textContent=record.note;
+      const link=document.createElement('a');link.href=record.source;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Ouvrir la source officielle ; vérifier la notice applicable';box.append(t,note,link);out.append(box);
+    }
+    if($('role').value==='technologist')for(const f of evaluation.findings)p(f.component+' — '+f.criterion+' : '+f.status+' — '+f.detail);
+    if(components.length)p('Les références et paramètres restent dans cette page. Aucun dossier patient ni compte utilisateur n’est créé.');
+  });
+
 </script>
 </body>
 </html>

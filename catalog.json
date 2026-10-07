@@ -12,7 +12,8 @@
     "source_url": "https://www.medtronic.com/en-us/healthcare-professionals/products/cardiovascular/heart-valves/mechanical-valves-conduits/medtronic-open-pivot-mechanical-heart-valve.html",
     "source_type": "page fabricant, famille",
     "mri_conditions": null,
-    "status": "piste documentaire — notice du modèle exact requise"
+    "status": "piste documentaire — notice du modèle exact requise",
+    "region": "À vérifier sur le document fabricant"
   },
   {
     "id": "open-pivot-avg-family",
@@ -27,7 +28,8 @@
     "source_url": "https://www.medtronic.com/en-us/healthcare-professionals/products/cardiovascular/heart-valves/mechanical-valves-conduits/medtronic-open-pivot-aortic-valved-graft.html",
     "source_type": "page fabricant, famille",
     "mri_conditions": null,
-    "status": "piste documentaire — identification du conduit requise"
+    "status": "piste documentaire — identification du conduit requise",
+    "region": "À vérifier sur le document fabricant"
   },
   {
     "id": "boston-imageready-model-lookup",
@@ -43,7 +45,8 @@
     "source_url": "https://www.bostonscientific.com/imageready/en-US/model-lookup.html",
     "source_type": "recherche fabricant des modèles",
     "mri_conditions": null,
-    "status": "piste documentaire — vérifier tout le système et son guide technique"
+    "status": "piste documentaire — vérifier tout le système et son guide technique",
+    "region": "À vérifier sur le document fabricant"
   },
   {
     "id": "medtronic-mri-library",
@@ -59,7 +62,8 @@
     "scope": "Portail français : rechercher chaque référence et la notice applicable au système complet.",
     "source_type": "portail fabricant ; notice exacte à rechercher",
     "mri_conditions": null,
-    "status": "piste documentaire — aucune condition attribuée au patient"
+    "status": "piste documentaire — aucune condition attribuée au patient",
+    "region": "À vérifier sur le document fabricant"
   },
   {
     "id": "abbott-mri-library",
@@ -76,7 +80,8 @@
     "scope": "Portail américain : vérifier les références, le pays et le manuel applicable au boîtier et aux sondes.",
     "source_type": "portail fabricant ; notice exacte à rechercher",
     "mri_conditions": null,
-    "status": "piste documentaire — aucune condition attribuée au patient"
+    "status": "piste documentaire — aucune condition attribuée au patient",
+    "region": "À vérifier sur le document fabricant"
   },
   {
     "id": "biotronik-system-check",
@@ -90,7 +95,8 @@
     "scope": "Vérifier le système complet, les sondes et le pays dans le portail fabricant.",
     "source_type": "portail fabricant ; notice exacte à rechercher",
     "mri_conditions": null,
-    "status": "piste documentaire — aucune condition attribuée au patient"
+    "status": "piste documentaire — aucune condition attribuée au patient",
+    "region": "À vérifier sur le document fabricant"
   },
   {
     "id": "cochlear-mri",
@@ -105,7 +111,8 @@
     "scope": "Identifier le modèle implanté, le champ, la gestion de l’aimant et les accessoires requis dans la notice du pays applicable.",
     "source_type": "portail fabricant ; notice exacte à rechercher",
     "mri_conditions": null,
-    "status": "conditions non établies — notice exacte et validation du service requises"
+    "status": "conditions non établies — notice exacte et validation du service requises",
+    "region": "À vérifier sur le document fabricant"
   },
   {
     "id": "medel-mri",
@@ -116,11 +123,12 @@
       "MED EL",
       "MEDel"
     ],
-    "source_url": "https://blog.medel.com/technology/the-complete-guide-to-mri-with-a-cochlear-implant/",
-    "scope": "Informations générales fabricant ; obtenir les instructions d’utilisation du modèle exact avant toute comparaison.",
+    "source_url": "https://www.medel.com/important-safety-information",
+    "scope": "Portail officiel : sélectionner le pays et le modèle implanté pour obtenir les informations IRM et les instructions applicables.",
     "source_type": "portail fabricant ; notice exacte à rechercher",
     "mri_conditions": null,
-    "status": "conditions non établies — notice exacte et validation du service requises"
+    "status": "conditions non établies — notice exacte et validation du service requises",
+    "region": "À vérifier sur le document fabricant"
   },
   {
     "id": "abbott-neuro-mri",
@@ -137,7 +145,8 @@
     "scope": "Identifier générateur, électrodes, extensions, positions d’implantation et mode IRM dans le guide du système complet.",
     "source_type": "portail fabricant ; notice exacte à rechercher",
     "mri_conditions": null,
-    "status": "conditions non établies — notice exacte et validation du service requises"
+    "status": "conditions non établies — notice exacte et validation du service requises",
+    "region": "À vérifier sur le document fabricant"
   },
   {
     "id": "omnipod-guides",
@@ -151,6 +160,39 @@
     "scope": "Dispositif externe : consulter le guide exact pour les exigences de retrait et organiser la prise en charge du traitement avec l’équipe soignante.",
     "source_type": "portail fabricant ; notice exacte à rechercher",
     "mri_conditions": null,
-    "status": "conditions non établies — notice exacte et validation du service requises"
+    "status": "conditions non établies — notice exacte et validation du service requises",
+    "region": "À vérifier sur le document fabricant"
+  },
+  {
+    "id": "fda-mri-labeling",
+    "name": "FDA — sécurité IRM et étiquetage des dispositifs",
+    "manufacturer": "FDA",
+    "aliases": [
+      "FDA",
+      "MR Conditional",
+      "étiquetage IRM"
+    ],
+    "source_url": "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/testing-and-labeling-medical-devices-safety-magnetic-resonance-mr-environment",
+    "scope": "Guide officiel américain ; méthode générale, ne donne pas les conditions d’un implant précis.",
+    "source_type": "guide officiel",
+    "region": "États-Unis",
+    "mri_conditions": null,
+    "status": "document général — aucune condition patient"
+  },
+  {
+    "id": "has-dmi-mri",
+    "name": "HAS — guide français DMI et IRM",
+    "manufacturer": "HAS",
+    "aliases": [
+      "HAS",
+      "guide DMI",
+      "compatibilité IRM"
+    ],
+    "source_url": "https://www.has-sante.fr/jcms/p_3303496/fr/irm-un-nouveau-guide-pour-renforcer-la-securite-des-patients-porteurs-de-dispositifs-medicaux-implantes",
+    "scope": "Guide français ; vérifier le système et l’ensemble des conditions du fabricant.",
+    "source_type": "guide officiel",
+    "region": "France",
+    "mri_conditions": null,
+    "status": "document général — aucune condition patient"
   }
 ]
