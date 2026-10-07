@@ -1,5 +1,5 @@
 from flask import Flask,request,jsonify,send_from_directory
-import sqlite3,urllib.request,urllib.parse,json,datetime
+import sqlite3,urllib.request,urllib.parse,json,datetime,re
 from engine import search_catalog,compare_conditions
 from identification import model_query, candidates
 from urllib.error import HTTPError
@@ -10,7 +10,9 @@ def get(u):
  with urllib.request.urlopen(urllib.request.Request(u,headers={"User-Agent":"MR-DMI/1"}),timeout=12) as r:return json.loads(r.read())
 @A.get("/api/device")
 def dev():
- q=request.args.get("q","").strip(); c=con(); r=c.execute("SELECT * FROM devices WHERE di=?",(q,)).fetchone()
+ q=request.args.get("q","").strip()
+ if not re.fullmatch(r"[0-9]{14}",q):return jsonify(ok=False,error="Renseignez uniquement le DI GS1 à 14 chiffres, sans numéro de série ni donnée patient."),400
+ c=con(); r=c.execute("SELECT * FROM devices WHERE di=?",(q,)).fetchone()
  if r:return jsonify(ok=True,cached=True,device=dict(r))
  try:
   z=get("https://accessgudid.nlm.nih.gov/api/v3/devices/lookup.json?di="+urllib.parse.quote(q));d=z["gudid"]["device"]; ids=d.get("identifiers",{}).get("identifier",[]);ids=[ids] if isinstance(ids,dict) else ids
@@ -45,6 +47,7 @@ def catalog():
 def compare():
  try:
   data=request.get_json() or {}
+  if not isinstance(data,dict):return jsonify(error="Objet de comparaison attendu"),400
   return jsonify(compare_conditions(data.get("conditions"),data.get("exam")))
  except (ValueError,TypeError,OverflowError):return jsonify(error="Paramètres de comparaison invalides"),400
 @A.get("/")
@@ -60,3 +63,4 @@ def icon(size):
  if size not in (192,512):return ("Not found",404)
  return send_from_directory(".",f"icon-{size}.png",mimetype="image/png")
 if __name__=="__main__":con();A.run(host="0.0.0.0",port=8080)
+

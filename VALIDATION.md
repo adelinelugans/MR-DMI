@@ -39,3 +39,7 @@ Les fonctions d'historique patient, d'authentification et de veille automatique 
 ## Version 2026-10-07.11 — contrôle technique conditionnel
 
 Le sous-ensemble Abbott pacemaker déjà intégré compare aussi tunnel horizontal cylindrique, noyau hydrogène, position dorsale bras le long du corps et implantation pectorale. Antenne émettrice corps à 3 T ; corps ou émission/réception locale tête/membre à 1,5 T. CP obligatoire à 3 T et pour les antennes locales à 1,5 T. Source : ARTEN600159320 A, pages imprimées 2–6. Les champs restent inconnus par défaut. Ces règles ne sont pas extrapolées aux implants cochléaires ou neurostimulateurs. Les restrictions cliniques, la notice France et la revue indépendante restent à compléter : aucun résultat n’autorise l’IRM. Tests : champs manquants, antenne locale à 3 T, CP, autres géométries/noyaux/positions/sites, champ hors fiche.
+
+## Version 2026-10-07.12 — entrées API
+
+La recherche AccessGUDID accepte uniquement un DI GS1 numérique à 14 chiffres. Les numéros de série et autres saisies sont rejetés avant accès réseau ou base. Les DI d'autres formats doivent être traités via une autre procédure, non couverte ici. Une comparaison JSON non objet renvoie 400. Tests API vérifient l'absence d'appel réseau et de base sur saisie invalide.
