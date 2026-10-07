@@ -23,7 +23,8 @@ def search_catalog(query):
         maker_terms = set(re.findall(r"[\w-]{3,}", item.get("manufacturer", "").split("(")[0].casefold()))
         specific_matches = [term for term in matches if term not in maker_terms]
         is_portal = item.get("source_type", "").startswith("portail fabricant") or item["id"] == "boston-imageready-model-lookup"
-        if matches and (specific_matches or is_portal):
+        is_official_guide = item.get("source_type") == "guide officiel"
+        if matches and (specific_matches or is_portal or is_official_guide):
             results.append({**item, "matched_terms": matches, "score": len(matches)})
     return sorted(results, key=lambda x: -x["score"])
 
@@ -78,3 +79,4 @@ def compare_conditions(conditions, exam):
         "overall": "Dépassement identifié — ne pas réaliser selon ces paramètres" if any(x["status"] == "dépassé" for x in findings) else "Évaluation incomplète — validation humaine requise",
         "missing_checks": ["Référence exacte de chaque implant et notice applicable", "Antennes et zone d'examen", "Positionnement et délai après implantation", "Mode, programmation et surveillance du dispositif", "Conditions additionnelles et protocole local"],
     }
+

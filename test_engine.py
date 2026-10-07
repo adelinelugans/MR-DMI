@@ -4,6 +4,12 @@ from engine import compare_conditions, search_catalog
 
 
 class DocumentaryEngineTests(unittest.TestCase):
+    def test_official_agency_guides_are_searchable_without_device_conditions(self):
+        for agency, identifier in [("FDA", "fda-mri-labeling"), ("HAS", "has-dmi-mri")]:
+            matches = search_catalog(agency)
+            self.assertIn(identifier, [item["id"] for item in matches])
+            self.assertTrue(all(item["mri_conditions"] is None for item in matches))
+
     def test_family_search_does_not_identify_a_model(self):
         matches = search_catalog("ATS Bentall")
         self.assertEqual(len(matches), 2)
@@ -35,3 +41,4 @@ class DocumentaryEngineTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
