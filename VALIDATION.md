@@ -53,3 +53,7 @@ La recherche AccessGUDID accepte uniquement un DI GS1 numérique à 14 chiffres.
 - Tests : limites SAR et égalités, affichage tête absent, repère hors tableau, aimant CI500 à 3 T, kit manquant, implants bilatéraux, retrait pompe, exclusion des données patient et exposition des profils, recherche exacte sans correspondance partielle.
 
 La version demeure un outil de préparation documentaire. Aucun système n'a le statut revue clinique complète. Il manque notamment une revue indépendante de chaque règle et notice, un jeu représentatif de cartes anonymisées pour mesurer l'identification, les protocoles du centre, et l'organisation de déploiement clinique avec habilitations et suivi qualité.
+
+## Version 2026-10-07.14
+
+Correction vérifiée après essais sur le site public : priorité CSS des éléments masqués (champs spécifiques aux composants et aperçu). Les fixtures courantes utilisent uniquement des numéros de série fictifs. README remplacé par la description du fonctionnement réel, de la couverture limitée et des commandes de tests.

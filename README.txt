@@ -1,31 +1,20 @@
-import base64, json, os
-from flask import Flask, request, render_template_string
-import anthropic
+MR-DMI — aide à la préparation du dossier IRM
+Version 2026-10-07.14
 
-app = Flask(__name__)
-MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5-5")
-SCANNERS = ["Magnetom Altea 1,5 T", "Magnetom Sola 1,5 T", "Magnetom Flow 1,5 T"]
+Application : https://mr-dmi-1.onrender.com/
 
+Lecture locale des cartes, identification de candidats, sources officielles et comparaison partielle des conditions documentées.
+Parcours manipulateur IRM, prescripteur et secrétariat ; inventaire des composants ; synthèse imprimable et texte ; jusqu’à quatre profils de machines conservés sur l’appareil.
 
-def read_card(img_bytes, media_type):
-    client = anthropic.Anthropic()  # lit ANTHROPIC_API_KEY
-    msg = client.messages.create(
-        model=MODEL, max_tokens=500,
-        messages=[{"role": "user", "content": [
-            {"type": "image", "source": {"type": "base64", "media_type": media_type,
-                                         "data": base64.b64encode(img_bytes).decode()}},
-            {"type": "text", "text": (
-                "Carte de porteur d'un dispositif médical implantable. Réponds UNIQUEMENT en JSON : "
-                '{"fabricant":"","modele":"","numero_serie":"","type":"","date_implantation":""}. '
-                "Laisse vide ce qui n'est pas lisible. N'invente rien.")}]}])
-    txt = msg.content[0].text.strip().replace("```json", "").replace("```", "").strip()
-    return json.loads(txt)
+Couverture automatique limitée aux références explicitement répertoriées dans identification.js. Les autres références restent à documenter avec leur notice exacte.
+Les résumés intégrés sont incomplets : l’application ne délivre aucune autorisation d’examen.
 
+Développement
+Python 3, Flask, Gunicorn ; JavaScript navigateur.
+Installer requirements.txt puis lancer python app.py.
+Tests : python -m unittest test_engine test_identification test_api
+Tests navigateur logiques : node test_identification.cjs
+Les jeux de tests utilisent des identifiants fictifs.
 
-CACHE = {}
-
-
-def lookup(card, scanner):
-    modele = (card.get("modele") or "").strip()
-    if not modele:
-        return None
+Voir VALIDATION.md pour les tests, notices intégrées et travaux encore nécessaires avant un usage clinique généralisé.
+Aucun nom patient, photographie ou document patient ne doit être ajouté au dépôt public.

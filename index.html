@@ -9,6 +9,7 @@
   <title>MR-DMI — lecture de carte</title>
   <style>
     :root{font:16px/1.5 system-ui,sans-serif;color:#172638;background:#f3f6f8}
+    [hidden]{display:none!important}
     *{box-sizing:border-box}body{margin:0}header{background:#163653;color:white;padding:1.4rem max(1rem,calc((100% - 980px)/2))}
     h1{margin:0;font-size:1.7rem}header p{margin:.2rem 0 0;color:#d9e7f0}
     main{max-width:980px;margin:1.5rem auto;padding:0 1rem;display:grid;gap:1rem}
@@ -28,7 +29,7 @@
 <body>
 <header><h1>MR-DMI</h1><p>Lecture assistée des cartes et comptes rendus d'implantation</p></header>
 <main>
-  <p class="hint">Version lecture 2026-10-07.13</p>
+  <p class="hint">Version lecture 2026-10-07.14</p>
   <section id="examples">
     <h2>Tester le parcours avec un exemple fictif</h2>
     <p>Ces exemples utilisent des références techniques réelles et des paramètres fictifs. Ils testent le parcours et les contrôles ; ils ne mesurent pas la fiabilité de lecture d’une carte patient.</p>
@@ -472,7 +473,7 @@
     const evaluation=evaluateDmiWorkflow(components,exam,$('complete-inventory').value==='yes');
     const out=$('workflow-result');out.replaceChildren();
     const p=text=>{const el=document.createElement('p');el.textContent=text;out.append(el);};
-    p('MR-DMI — synthèse technique — version 2026-10-07.13 — '+new Date().toLocaleString('fr-FR'));
+    p('MR-DMI — synthèse technique — version 2026-10-07.14 — '+new Date().toLocaleString('fr-FR'));
     if(demoMode)p('EXEMPLE FICTIF — aucune donnée patient — paramètres de démonstration.');
     p('Vérification partielle ; aucune autorisation d’examen.');
     p(evaluation.status);

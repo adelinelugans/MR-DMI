@@ -8,15 +8,15 @@ assert.equal(extractIdentifiers('taille 23 numéro série 12345').models.length,
 assert.equal(extractIdentifiers('Medtronic Abbott Model: A2').makers.length,2);
 console.log('6 local extraction checks passed');
 
-const card=extractIdentifiers('Abbott Modèle TENDRIL STS\\nN° de série EEL414832\\nAbbott Modèle TENDRIL STS\\nN° de série EEM330008');
+const card=extractIdentifiers('Abbott Modèle TENDRIL STS\\nN° de série TEST123456\\nAbbott Modèle TENDRIL STS\\nN° de série DEMO654321');
 assert.deepEqual(card.models,['TENDRIL STS']);
-assert.deepEqual(card.serials,['EEL414832','EEM330008']);
+assert.deepEqual(card.serials,['TEST123456','DEMO654321']);
 assert.deepEqual(extractIdentifiers('Omnipod Model: 5').makers,['Insulet']);
 assert.deepEqual(extractIdentifiers('MEDel').makers,['MED-EL']);
 
 
 assert.deepEqual(extractIdentifiers('Modèle\nli').models,[]);
-assert.deepEqual(extractIdentifiers('N° de série\n|\nEEL414832').serialCandidates,['EEL414832']);
+assert.deepEqual(extractIdentifiers('N° de série\n|\nTEST123456').serialCandidates,['TEST123456']);
 
 const {evaluateDmiWorkflow,dmiRoleTasks}=require('./identification.js');
 const implant={maker:'Cochlear',model:'CI632',category:'cochlear',confirmed:true};
