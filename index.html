@@ -28,7 +28,16 @@
 <body>
 <header><h1>MR-DMI</h1><p>Lecture assistée des cartes et comptes rendus d'implantation</p></header>
 <main>
-  <p class="hint">Version lecture 2026-10-07.8</p>
+  <p class="hint">Version lecture 2026-10-07.9</p>
+  <section id="examples">
+    <h2>Tester le parcours avec un exemple fictif</h2>
+    <p>Ces exemples utilisent des références techniques réelles et des paramètres fictifs. Ils testent le parcours et les contrôles ; ils ne mesurent pas la fiabilité de lecture d’une carte patient.</p>
+    <label for="example-case">Exemple à charger</label>
+    <select id="example-case"><option value="cardiac">Cardiaque — boîtier et sonde identifiés à 1,5 T</option><option value="neuro">Neurostimulateur — champ 3 T hors de la fiche intégrée</option><option value="unknown">Dispositif inconnu — informations à compléter</option></select>
+    <button id="load-example" type="button">Charger et vérifier l’exemple fictif</button>
+    <button id="clear-example" type="button">Effacer les données de l’exemple</button>
+    <p id="example-status" class="notice" hidden></p>
+  </section>
   <section id="install-help">
     <h2>Installer MR-DMI sur le téléphone</h2>
     <p class="hint">Dans Chrome sur Android, ouvrez le menu ⋮ puis « Installer l’application » ou « Ajouter à l’écran d’accueil ». Vous pourrez ensuite l’ouvrir par son icône. Une connexion Internet reste nécessaire pour la recherche et la comparaison.</p>
@@ -128,8 +137,9 @@
     installPrompt=null;$('install').hidden=true;
   });
   window.addEventListener('appinstalled',()=>{$('install').hidden=true;});
-  let file,objectUrl;
+  let file,objectUrl,demoMode=false;
   const selectFile=e=>{
+    demoMode=false;$('example-status').hidden=true;
     file=e.target.files[0];$('read').disabled=!file;
     if(objectUrl)URL.revokeObjectURL(objectUrl);
     $('preview').hidden=true;
@@ -398,7 +408,8 @@
     const evaluation=evaluateDmiWorkflow(components,exam,$('complete-inventory').value==='yes');
     const out=$('workflow-result');out.replaceChildren();
     const p=text=>{const el=document.createElement('p');el.textContent=text;out.append(el);};
-    p('MR-DMI — synthèse technique — version 2026-10-07.8 — '+new Date().toLocaleString('fr-FR'));
+    p('MR-DMI — synthèse technique — version 2026-10-07.9 — '+new Date().toLocaleString('fr-FR'));
+    if(demoMode)p('EXEMPLE FICTIF — aucune donnée patient — paramètres de démonstration.');
     p('Vérification partielle ; aucune autorisation d’examen.');
     p(evaluation.status);
     for(const [i,c] of components.entries())p('Composant '+(i+1)+' — système '+c.system+' — '+c.category+' — '+c.maker+' '+c.model+(c.length_cm?' — '+c.length_cm+' cm':'')+' — référence '+(c.confirmed?'confirmée':'non confirmée'));
@@ -418,6 +429,23 @@
     if(components.length)p('Les références et paramètres restent dans cette page. Aucun dossier patient ni compte utilisateur n’est créé.');
   });
 
+  function clearExample(){
+    demoMode=false;invalidateReport();componentRows.splice(0);$('components').replaceChildren();
+    $('complete-inventory').value='unknown';
+    for(const id of ['workflow-field','workflow-mode','workflow-gradient','workflow-slew','workflow-duration','workflow-wait'])$(id).value='';
+    $('example-status').hidden=true;
+  }
+  $('clear-example').addEventListener('click',clearExample);
+  $('load-example').addEventListener('click',()=>{
+    clearExample();demoMode=true;$('role').value='technologist';$('workflow-exam').hidden=false;$('workflow-exam').open=true;
+    const selected=$('example-case').value;
+    const components=selected==='cardiac'?[{system:'1',category:'cardiac',maker:'Abbott',model:'PM2272'},{system:'1',category:'lead',maker:'Abbott',model:'2088TC',length_cm:52}]:selected==='neuro'?[{system:'1',category:'neuro',maker:'Abbott',model:'3660'},{system:'1',category:'lead',maker:'Abbott',model:'3186',length_cm:60}]:[{system:'1',category:'other',maker:'Fabricant à préciser',model:'Référence inconnue'}];
+    for(const c of components){addComponent(c);componentRows[componentRows.length-1].fields.confirmed.checked=selected!=='unknown';}
+    $('complete-inventory').value=selected==='unknown'?'unknown':'yes';
+    $('workflow-field').value=selected==='neuro'?'3':'1.5';$('workflow-mode').value='normal';$('workflow-gradient').value='20';$('workflow-slew').value='180';$('workflow-duration').value='20';$('workflow-wait').value='30';
+    $('example-status').hidden=false;$('example-status').textContent='EXEMPLE FICTIF chargé. Résultat attendu : '+(selected==='neuro'?'champ non conforme au résumé intégré.':selected==='unknown'?'références non confirmées, conditions inconnues.':'limites numériques citées respectées ; évaluation encore incomplète, notice France et restrictions restantes à vérifier.');
+    $('evaluate-workflow').click();$('workflow').scrollIntoView({behavior:'smooth',block:'start'});
+  });
 </script>
 </body>
 </html>
