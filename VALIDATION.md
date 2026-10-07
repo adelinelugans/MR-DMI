@@ -57,3 +57,9 @@ La version demeure un outil de préparation documentaire. Aucun système n'a le 
 ## Version 2026-10-07.14
 
 Correction vérifiée après essais sur le site public : priorité CSS des éléments masqués (champs spécifiques aux composants et aperçu). Les fixtures courantes utilisent uniquement des numéros de série fictifs. README remplacé par la description du fonctionnement réel, de la couverture limitée et des commandes de tests.
+
+## Version 2026-10-07.15
+
+Nouveau dossier : effacement explicite du document, de la prévisualisation, des indices, des composants et des paramètres de l’examen ; profils de machines conservés. Les exports déjà téléchargés ne sont pas effacés. Synthèse des types de composants, retrait, aimant et kit en français. Sélection automatique du profil venant d’être enregistré.
+
+Les réponses de lecture et de recherche lancées avant un changement de document ou une remise à zéro sont ignorées pour empêcher la réapparition des données du dossier précédent.

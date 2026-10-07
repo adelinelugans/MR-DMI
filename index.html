@@ -29,7 +29,9 @@
 <body>
 <header><h1>MR-DMI</h1><p>Lecture assistée des cartes et comptes rendus d'implantation</p></header>
 <main>
-  <p class="hint">Version lecture 2026-10-07.14</p>
+  <p class="hint">Version lecture 2026-10-07.15</p>
+  <button id="new-dossier" type="button">Nouveau dossier — effacer les données de l’examen</button>
+  <p id="reset-status" class="hint" role="status" aria-live="polite"></p>
   <section id="examples">
     <h2>Tester le parcours avec un exemple fictif</h2>
     <p>Ces exemples utilisent des références techniques réelles et des paramètres fictifs. Ils testent le parcours et les contrôles ; ils ne mesurent pas la fiabilité de lecture d’une carte patient.</p>
@@ -163,8 +165,9 @@
     installPrompt=null;$('install').hidden=true;
   });
   window.addEventListener('appinstalled',()=>{$('install').hidden=true;});
-  let file,objectUrl,demoMode=false;
+  let file,objectUrl,demoMode=false,documentEpoch=0;
   const selectFile=e=>{
+    documentEpoch++;
     demoMode=false;$('example-status').hidden=true;
     file=e.target.files[0];$('read').disabled=!file;
     if(objectUrl)URL.revokeObjectURL(objectUrl);
@@ -182,10 +185,11 @@
     const detail=typeof error==='string'?error:(error && error.message)||'';
     return detail && detail!=='undefined' ? detail : 'Le moteur de lecture a échoué sans préciser la cause. Vérifiez la connexion Internet puis réessayez. Vous pouvez aussi coller le texte du document.';
   }
-  async function createOcrWorker(){
+  async function createOcrWorker(epoch){
     if(!window.Tesseract)throw Error('Le moteur OCR n’a pas chargé. Vérifiez la connexion Internet puis rechargez la page.');
     return Tesseract.createWorker('fra+eng',1,{
       logger:progress=>{
+        if(epoch!==documentEpoch)return;
         $('ocr-status').textContent='Lecture : '+(progress.status||'préparation')+(Number.isFinite(progress.progress)?' — '+Math.round(progress.progress*100)+' %':'');
       }
     });
@@ -241,13 +245,14 @@
     await worker.setParameters({tessedit_pageseg_mode:'3'});
     return evidenceScore(third.text)>evidenceScore(best.text)?third.text:best.text;
   }
-  async function readPdf(file,getWorker){
+  async function readPdf(file,getWorker,epoch){
     if(!window.pdfjsLib)throw Error('Le lecteur PDF n’a pas chargé. Vérifiez la connexion Internet.');
     pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
     if(pdf.numPages>10)throw Error('PDF de plus de 10 pages : choisissez les pages utiles du compte rendu.');
     const pages=[];
     for(let number=1;number<=pdf.numPages;number++){
+      if(epoch!==documentEpoch)return '';
       $('ocr-status').textContent='Lecture du PDF : page '+number+'/'+pdf.numPages+'…';
       const page=await pdf.getPage(number), content=await page.getTextContent();
       let lines=content.items.map(item=>item.str).join(' ');
@@ -263,22 +268,25 @@
   }
   $('read').addEventListener('click',async()=>{
     if(!file)return;
+    const epoch=documentEpoch,selectedFile=file;let text;
     $('read').disabled=true;$('ocr-status').textContent='Lecture en cours…';
     let worker;
-    const getWorker=async()=>worker||(worker=await createOcrWorker());
+    const getWorker=async()=>worker||(worker=await createOcrWorker(epoch));
     try{
       if(file.type==='application/pdf'||/\.pdf$/i.test(file.name)){
-        $('raw').value=await readPdf(file,getWorker);
+        text=await readPdf(selectedFile,getWorker,epoch);
       }else if(file.type==='text/plain'||/\.txt$/i.test(file.name)){
-        $('raw').value=await file.text();
+        text=await selectedFile.text();
       }else if(file.type.startsWith('image/')){
-        const imageData=await prepareOcrImage(file);
-        $('raw').value=await recognizeImage(imageData,await getWorker());
+        const imageData=await prepareOcrImage(selectedFile);
+        text=await recognizeImage(imageData,await getWorker());
       }else throw Error('Choisissez une image, un PDF ou un fichier texte.');
+      if(epoch!==documentEpoch)return;
+      $('raw').value=text;
       if(!$('raw').value.trim())throw Error('Aucun texte lisible détecté. Prenez une photo nette, de face et rapprochée, ou collez le texte du document.');
       $('analyze').click();
       $('ocr-status').textContent=evidenceScore($('raw').value)>0?'Lecture terminée avec indices partiels. Vérifiez tous les caractères des références et des séries sur le document original.':'Texte extrait sans dispositif reconnu. Essayez une capture d’écran directe ou une photo rapprochée des références ; aucune condition IRM établie.';
-    }catch(err){$('ocr-status').textContent='Lecture impossible : '+ocrErrorMessage(err);}
+    }catch(err){if(epoch===documentEpoch)$('ocr-status').textContent='Lecture impossible : '+ocrErrorMessage(err);}
     finally{try{if(worker)await worker.terminate();}catch(error){console.warn('OCR cleanup failed');}finally{$('read').disabled=!file;}}
   });
   $('analyze').addEventListener('click',()=>{
@@ -311,11 +319,12 @@
     if(terms.length)$('search-docs').click();
   });
   $('search-model').addEventListener('click',async()=>{
+    const epoch=documentEpoch;
     const out=$('result');out.replaceChildren();$('search-model').disabled=true;
     out.textContent='Recherche du fabricant et du modèle…';
     try{
       const query=new URLSearchParams({maker:$('maker').value.trim(),model:$('model').value.trim()});
-      const response=await fetch('/api/search?'+query),data=await response.json();
+      const response=await fetch('/api/search?'+query),data=await response.json();if(epoch!==documentEpoch)return;
       if(!response.ok||!data.ok)throw Error(data.error||'Recherche indisponible');
       out.replaceChildren();
       const note=document.createElement('p');note.textContent=data.note;out.append(note);
@@ -329,16 +338,17 @@
       }
       if(!data.candidates.length){const p=document.createElement('p');p.textContent='Aucun candidat trouvé. Vérifiez la référence et demandez la traçabilité ou la notice au fabricant.';out.append(p);}
       $('terms').value=$('maker').value.trim()+' '+$('model').value.trim();$('search-docs').click();
-    }catch(error){out.textContent=error.message;}
+    }catch(error){if(epoch===documentEpoch)out.textContent=error.message;}
     finally{$('search-model').disabled=false;}
   });
   $('lookup').addEventListener('click',async()=>{
+    const epoch=documentEpoch;
     const q=$('udi').value.trim(),out=$('result');out.replaceChildren();
     if(!/^[0-9]{14}$/.test(q)){out.textContent='Renseignez uniquement le DI GS1 à 14 chiffres, sans numéro de série ni donnée patient.';return;}
     $('lookup').disabled=true;out.textContent='Recherche en cours…';
     try{
       const response=await fetch('/api/device?q='+encodeURIComponent(q));
-      const data=await response.json();
+      const data=await response.json();if(epoch!==documentEpoch)return;
       if(!response.ok||!data.ok)throw Error(data.error||'Dispositif non retrouvé');
       const d=data.device,dl=document.createElement('dl');dl.className='result';
       $('maker').value=d.company||'';$('model').value=d.model||'';
@@ -349,15 +359,16 @@
       const maker=(d.company||'').toLowerCase(),brand=(d.brand||'').toLowerCase();
       const terms=['Medtronic','ATS','Open Pivot','Boston Scientific'].filter(t=>(maker+' '+brand).includes(t.toLowerCase()));
       if(terms.length){$('terms').value=terms.join(' ');$('search-docs').click();}
-    }catch(err){out.textContent=err.message;out.className='error';}
+    }catch(err){if(epoch===documentEpoch){out.textContent=err.message;out.className='error';}}
     finally{$('lookup').disabled=false;}
   });
   $('search-docs').addEventListener('click',async()=>{
+    const epoch=documentEpoch;
     const q=$('terms').value.trim(),out=$('documents');out.replaceChildren();
     if(!q){out.textContent='Indiquez une marque ou une famille de dispositif.';return;}
     if(/patient|naissance|séjour/i.test(q)){out.textContent='Retirez les données patient de la recherche.';return;}
     try{
-      const data=await (await fetch('/api/catalog?q='+encodeURIComponent(q))).json();
+      const data=await (await fetch('/api/catalog?q='+encodeURIComponent(q))).json();if(epoch!==documentEpoch)return;
       if(!data.results.length){out.textContent='Aucune source répertoriée. Recherchez la traçabilité hospitalière ou contactez le fabricant.';return;}
       for(const item of data.results){
         const box=document.createElement('div');box.className='result';
@@ -369,9 +380,10 @@
       const exact=data.results.filter(item=>item.exact_models);
       $('manufacturer-parameters').textContent=exact.length?'Notices répertoriées pour les références recherchées : '+exact.map(item=>item.name+' ('+(item.document_version||item.region)+')').join(' ; ')+'. Dans le dossier ci-dessous, confirmez les composants pour afficher les contrôles automatiques intégrés.':'Sources générales retrouvées. Aucun résumé technique exact intégré pour cette recherche ; référence et notice à confirmer.';
       const gudid=document.createElement('a');gudid.href='https://accessgudid.nlm.nih.gov/devices/search?query='+encodeURIComponent(q);gudid.target='_blank';gudid.rel='noopener noreferrer';gudid.textContent='Recherche complémentaire AccessGUDID (catalogue américain, identification seulement)';out.append(gudid);
-    }catch(e){out.textContent='Recherche indisponible : '+e.message;}
+    }catch(e){if(epoch===documentEpoch)out.textContent='Recherche indisponible : '+e.message;}
   });
   $('compare').addEventListener('click',async()=>{
+    const epoch=documentEpoch;
     const value=id=>$(id).value===''?null:Number($(id).value);
     const fields=$('allowed-field').value.split(',').map(x=>Number(x.trim())).filter(x=>Number.isFinite(x)&&x>0);
     const conditions={field_t:fields,sar_wkg:value('max-sar'),b1_rms_ut:value('max-b1'),spatial_gradient_t_m:value('max-gradient'),duration_min:value('max-duration')};
@@ -379,12 +391,12 @@
     const out=$('comparison');out.replaceChildren();
     try{
       const response=await fetch('/api/compare',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({conditions,exam})});
-      const data=await response.json();if(!response.ok)throw Error(data.error);
+      const data=await response.json();if(epoch!==documentEpoch)return;if(!response.ok)throw Error(data.error);
       const box=document.createElement('div');box.className='result';
       const heading=document.createElement('strong');heading.textContent=data.overall;box.append(heading);
       for(const finding of data.findings){const p=document.createElement('p');p.textContent=finding.criterion+' : '+finding.status+' — '+finding.detail;box.append(p);}
       const more=document.createElement('p');more.textContent='Toujours vérifier : '+data.missing_checks.join(' ; ');box.append(more);out.append(box);
-    }catch(e){out.textContent='Comparaison impossible : '+e.message;}
+    }catch(e){if(epoch===documentEpoch)out.textContent='Comparaison impossible : '+e.message;}
   });
   const componentTypes=[['cardiac','Boîtier cardiaque'],['lead','Sonde / électrode'],['cochlear','Implant auditif'],['neuro','Neurostimulateur'],['extension','Extension / adaptateur'],['pump','Pompe / dispositif diabète'],['other','Autre dispositif']];
   const componentRows=[];
@@ -449,7 +461,7 @@
     if(existing<0&&machineProfiles.length>=4){$('profile-status').textContent='Quatre profils maximum. Supprimez un profil ou réutilisez son nom pour le mettre à jour.';return;}
     const profile={centre,name,reference,saved_at:new Date().toISOString(),values:Object.fromEntries(machineKeys.map(key=>[key,$('workflow-'+key).value]))};
     const previous=machineProfiles.slice();if(existing>=0)machineProfiles[existing]=profile;else machineProfiles.push(profile);
-    if(!persistProfiles()){machineProfiles=previous;return;}renderProfiles();$('profile-status').textContent='Profil enregistré sur cet appareil. Les paramètres d’exposition restent à définir pour chaque examen.';
+    if(!persistProfiles()){machineProfiles=previous;return;}renderProfiles();$('saved-machine').value=String(existing>=0?existing:machineProfiles.length-1);$('profile-status').textContent='Profil enregistré sur cet appareil. Les paramètres d’exposition restent à définir pour chaque examen.';
   });
   $('load-machine').addEventListener('click',()=>{
     const value=$('saved-machine').value,profile=value===''?null:machineProfiles[Number(value)];if(!profile){$('profile-status').textContent='Sélectionnez un profil.';return;}
@@ -473,11 +485,11 @@
     const evaluation=evaluateDmiWorkflow(components,exam,$('complete-inventory').value==='yes');
     const out=$('workflow-result');out.replaceChildren();
     const p=text=>{const el=document.createElement('p');el.textContent=text;out.append(el);};
-    p('MR-DMI — synthèse technique — version 2026-10-07.14 — '+new Date().toLocaleString('fr-FR'));
+    p('MR-DMI — synthèse technique — version 2026-10-07.15 — '+new Date().toLocaleString('fr-FR'));
     if(demoMode)p('EXEMPLE FICTIF — aucune donnée patient — paramètres de démonstration.');
     p('Vérification partielle ; aucune autorisation d’examen.');
     p(evaluation.status);
-    for(const [i,c] of components.entries())p('Composant '+(i+1)+' — système '+c.system+' — '+c.category+' — '+c.maker+' '+c.model+(c.length_cm?' — '+c.length_cm+' cm':'')+(c.category==='pump'?' — retrait '+(c.removed||'inconnu'):'')+(c.category==='cochlear'?' — aimant '+(c.magnet||'inconnu')+' — kit '+(c.mri_kit||'inconnu'):'')+' — référence '+(c.confirmed?'confirmée':'non confirmée'));
+    for(const [i,c] of components.entries())p('Composant '+(i+1)+' — système '+c.system+' — '+(componentTypes.find(([value])=>value===c.category)?.[1]||'Type à préciser')+' — '+c.maker+' '+c.model+(c.length_cm?' — '+c.length_cm+' cm':'')+(c.category==='pump'?' — retrait '+({yes:'réalisé',no:'non réalisé'}[c.removed]||'non confirmé'):'')+(c.category==='cochlear'?' — aimant '+({present:'en place',removed:'retiré chirurgicalement'}[c.magnet]||'non confirmé')+' — kit '+({yes:'appliqué',no:'non appliqué'}[c.mri_kit]||'non confirmé'):'')+' — référence '+(c.confirmed?'confirmée':'non confirmée'));
     if(selectedMachine)p('Machine : '+selectedMachine);
     p('Inventaire complet : '+$('complete-inventory').selectedOptions[0].textContent);
     if($('role').value==='technologist')p('Paramètres envisagés : champ '+(exam.field_t||'inconnu')+' T ; mode '+(exam.mode||'inconnu')+' ; gradient '+(exam.spatial_gradient_t_m??'inconnu')+' T/m ; slew rate '+(exam.gradient_slew_t_m_s??'inconnu')+' T/m/s ; temps actif '+(exam.total_active_min??'inconnu')+' min ; attente '+(exam.wait_min??'inconnu')+' min.');
@@ -502,6 +514,18 @@
     for(const id of ['workflow-field','workflow-mode','workflow-gradient','workflow-slew','workflow-duration','workflow-wait','workflow-bore','workflow-nucleus','workflow-position','workflow-implant-location','workflow-coil','workflow-polarization','workflow-head-sar-reported','workflow-head-sar','workflow-body-sar','workflow-landmark','workflow-head-angle','workflow-external-removed','workflow-artifact-reviewed','workflow-therapy-plan'])$(id).value='';
     $('example-status').hidden=true;
   }
+  $('new-dossier').addEventListener('click',()=>{
+    documentEpoch++;clearExample();file=null;
+    if(objectUrl){URL.revokeObjectURL(objectUrl);objectUrl=null;}
+    for(const id of ['camera','document','raw','maker','model','udi','terms'])$(id).value='';
+    $('preview').removeAttribute('src');$('preview').hidden=true;$('read').disabled=true;
+    $('evidence').replaceChildren();$('evidence').hidden=true;
+    for(const id of ['selected-file','ocr-status','result','documents','comparison'])$(id)?.replaceChildren();
+    $('manufacturer-parameters').textContent='Nouveau dossier : références et notice exacte à confirmer.';
+    for(const id of ['allowed-field','actual-field','max-sar','actual-sar','max-b1','actual-b1','max-gradient','actual-gradient','max-duration','actual-duration'])$(id).value='';
+    $('saved-machine').value='';
+    $('reset-status').textContent='Nouveau dossier : document, références, composants et paramètres effacés. Les profils de machines enregistrés sont conservés. Les fichiers déjà exportés restent sur votre appareil.';
+  });
   $('clear-example').addEventListener('click',clearExample);
   $('load-example').addEventListener('click',()=>{
     clearExample();demoMode=true;$('role').value='technologist';$('workflow-exam').hidden=false;$('workflow-exam').open=true;
