@@ -10,6 +10,9 @@ class DocumentaryEngineTests(unittest.TestCase):
         self.assertTrue(all(item["mri_conditions"] is None for item in matches))
         self.assertEqual(search_catalog("patient ATS"), [])
 
+    def test_manufacturer_does_not_suggest_unrelated_valves(self):
+        self.assertEqual([item["id"] for item in search_catalog("Medtronic A2DR01")], ["medtronic-mri-library"])
+
     def test_exceeded_sar_blocks_planned_parameters(self):
         result = compare_conditions(
             {"field_t": [1.5, 3], "sar_wkg": 2},

@@ -19,7 +19,11 @@ def search_catalog(query):
     for item in CATALOG:
         haystack = " ".join([item["name"], *item["aliases"]]).casefold()
         matches = [t for t in terms if t in haystack]
-        if matches:
+        # A manufacturer alone must not suggest every unrelated implant family.
+        maker_terms = set(re.findall(r"[\w-]{3,}", item.get("manufacturer", "").split("(")[0].casefold()))
+        specific_matches = [term for term in matches if term not in maker_terms]
+        is_portal = item.get("source_type", "").startswith("portail fabricant") or item["id"] == "boston-imageready-model-lookup"
+        if matches and (specific_matches or is_portal):
             results.append({**item, "matched_terms": matches, "score": len(matches)})
     return sorted(results, key=lambda x: -x["score"])
 
