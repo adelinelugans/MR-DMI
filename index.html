@@ -28,7 +28,7 @@
 <body>
 <header><h1>MR-DMI</h1><p>Lecture assistée des cartes et comptes rendus d'implantation</p></header>
 <main>
-  <p class="hint">Version lecture 2026-10-07.10</p>
+  <p class="hint">Version lecture 2026-10-07.11</p>
   <section id="examples">
     <h2>Tester le parcours avec un exemple fictif</h2>
     <p>Ces exemples utilisent des références techniques réelles et des paramètres fictifs. Ils testent le parcours et les contrôles ; ils ne mesurent pas la fiabilité de lecture d’une carte patient.</p>
@@ -109,6 +109,12 @@
     <details id="workflow-exam"><summary>Paramètres de l’examen pour l’équipe IRM</summary>
       <label for="workflow-field">Champ réellement envisagé (T)</label><select id="workflow-field"><option value="">À confirmer</option><option value="1.5">1,5 T</option><option value="3">3 T</option><option value="0.55">0,55 T</option></select>
       <label for="workflow-mode">Mode de fonctionnement</label><select id="workflow-mode"><option value="">Non renseigné</option><option value="normal">Normal</option><option value="first">Premier niveau contrôlé</option></select>
+<label for="workflow-bore">Tunnel et orientation du champ</label><select id="workflow-bore"><option value="">Non confirmé</option><option value="horizontal_cylindrical">Cylindrique horizontal</option><option value="other">Autre configuration</option></select>
+<label for="workflow-nucleus">Noyau exploré</label><select id="workflow-nucleus"><option value="">Non confirmé</option><option value="hydrogen">Hydrogène (¹H)</option><option value="other">Autre noyau</option></select>
+<label for="workflow-position">Position prévue du patient</label><select id="workflow-position"><option value="">Non confirmé</option><option value="supine_arms_sides">Décubitus dorsal, bras le long du corps</option><option value="other">Autre position</option></select>
+<label for="workflow-implant-location">Implantation du boîtier cardiaque</label><select id="workflow-implant-location"><option value="">Non confirmé</option><option value="pectoral">Pectorale droite ou gauche</option><option value="other">Autre site</option></select>
+<label for="workflow-coil">Antenne RF émettrice (à distinguer de la réception)</label><select id="workflow-coil"><option value="">Non confirmé</option><option value="body">Antenne corps intégrée</option><option value="local_head">Antenne locale émission/réception tête</option><option value="local_upper">Antenne locale émission/réception membre supérieur</option><option value="local_lower">Antenne locale émission/réception membre inférieur</option><option value="other">Autre antenne émettrice</option></select>
+<label for="workflow-polarization">Polarisation RF à l’émission</label><select id="workflow-polarization"><option value="">Non confirmé</option><option value="cp">Circulaire (CP)</option><option value="other">Autre mode d’émission</option></select>
       <label for="workflow-gradient">Gradient spatial B0 de la machine (T/m)</label><input id="workflow-gradient" type="number" min="0" step="any">
       <label for="workflow-slew">Slew rate par axe de la machine (T/m/s)</label><input id="workflow-slew" type="number" min="0" step="any">
       <label for="workflow-duration">Temps actif total prévu de la séance (min)</label><input id="workflow-duration" type="number" min="0" step="any">
@@ -400,15 +406,15 @@
     $('workflow-result').textContent='Références importées sans confirmation. Un nom identique peut désigner plusieurs composants : ajoutez chaque exemplaire et vérifiez les associations.';
   });
   $('role').addEventListener('change',()=>{invalidateReport();$('workflow-exam').hidden=$('role').value!=='technologist';});
-  for(const id of ['complete-inventory','workflow-field','workflow-mode','workflow-gradient','workflow-slew','workflow-duration','workflow-wait']){ $(id).addEventListener('input',invalidateReport);$(id).addEventListener('change',invalidateReport); }
+  for(const id of ['complete-inventory','workflow-field','workflow-mode','workflow-gradient','workflow-slew','workflow-duration','workflow-wait','workflow-bore','workflow-nucleus','workflow-position','workflow-implant-location','workflow-coil','workflow-polarization']){ $(id).addEventListener('input',invalidateReport);$(id).addEventListener('change',invalidateReport); }
   $('evaluate-workflow').addEventListener('click',()=>{
     const number=id=>$(id).value===''?null:Number($(id).value);
     const components=getComponents();
-    const exam={field_t:number('workflow-field'),spatial_gradient_t_m:number('workflow-gradient'),gradient_slew_t_m_s:number('workflow-slew'),total_active_min:number('workflow-duration'),wait_min:number('workflow-wait'),mode:$('workflow-mode').value};
+    const exam={field_t:number('workflow-field'),spatial_gradient_t_m:number('workflow-gradient'),gradient_slew_t_m_s:number('workflow-slew'),total_active_min:number('workflow-duration'),wait_min:number('workflow-wait'),mode:$('workflow-mode').value,bore:$('workflow-bore').value,nucleus:$('workflow-nucleus').value,position:$('workflow-position').value,implant_location:$('workflow-implant-location').value,transmit_coil:$('workflow-coil').value,rf_polarization:$('workflow-polarization').value};
     const evaluation=evaluateDmiWorkflow(components,exam,$('complete-inventory').value==='yes');
     const out=$('workflow-result');out.replaceChildren();
     const p=text=>{const el=document.createElement('p');el.textContent=text;out.append(el);};
-    p('MR-DMI — synthèse technique — version 2026-10-07.10 — '+new Date().toLocaleString('fr-FR'));
+    p('MR-DMI — synthèse technique — version 2026-10-07.11 — '+new Date().toLocaleString('fr-FR'));
     if(demoMode)p('EXEMPLE FICTIF — aucune donnée patient — paramètres de démonstration.');
     p('Vérification partielle ; aucune autorisation d’examen.');
     p(evaluation.status);
@@ -432,7 +438,7 @@
   function clearExample(){
     demoMode=false;invalidateReport();componentRows.splice(0);$('components').replaceChildren();
     $('complete-inventory').value='unknown';
-    for(const id of ['workflow-field','workflow-mode','workflow-gradient','workflow-slew','workflow-duration','workflow-wait'])$(id).value='';
+    for(const id of ['workflow-field','workflow-mode','workflow-gradient','workflow-slew','workflow-duration','workflow-wait','workflow-bore','workflow-nucleus','workflow-position','workflow-implant-location','workflow-coil','workflow-polarization'])$(id).value='';
     $('example-status').hidden=true;
   }
   $('clear-example').addEventListener('click',clearExample);

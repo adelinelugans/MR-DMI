@@ -64,3 +64,17 @@ assert.equal(evaluateDmiWorkflow([generator,lead,{...generator,model:'3662'}],{f
 
 assert.ok(!dmiRoleTasks('technologist',[generator,lead]).some(x=>/Système cardiaque/.test(x)));
 assert.ok(dmiRoleTasks('technologist',[lead]).some(x=>/Sonde ou électrode seule/.test(x)));
+
+const technical={...plan,bore:'horizontal_cylindrical',nucleus:'hydrogen',position:'supine_arms_sides',implant_location:'pectoral',transmit_coil:'body'};
+const verify=exam=>evaluateDmiWorkflow([cardiac,pacingLead],exam,true);
+assert.ok(verify(plan).findings.some(x=>x.criterion==='Antenne RF émettrice'&&x.status==='inconnu'));
+assert.equal(verify(technical).blocked,false);
+for(const key of ['bore','nucleus','position','implant_location','transmit_coil'])assert.equal(verify({...technical,[key]:'other'}).blocked,true,key);
+assert.equal(verify({...technical,field_t:3,transmit_coil:'local_head',rf_polarization:'cp'}).blocked,true);
+assert.ok(verify({...technical,field_t:3}).findings.some(x=>x.criterion==='Polarisation RF'&&x.status==='inconnu'));
+assert.equal(verify({...technical,field_t:3,rf_polarization:'other'}).blocked,true);
+assert.equal(verify({...technical,field_t:3,rf_polarization:'cp'}).blocked,false);
+assert.equal(verify({...technical,transmit_coil:'local_head',rf_polarization:'other'}).blocked,true);
+assert.equal(verify({...technical,transmit_coil:'local_head',rf_polarization:'cp'}).blocked,false);
+assert.ok(verify({...technical,field_t:.55}).missing.some(x=>/antenne RF non évaluée/.test(x)));
+console.log('Contrôles RF, tunnel, position et informations manquantes réussis');

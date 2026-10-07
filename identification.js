@@ -34,7 +34,7 @@ function extractIdentifiers(text) {
 /* Documentary summaries. They are deliberately incomplete, never an exam authorization. */
 const DOCUMENTED_RULES = [
   {id:'abbott-assurity-endurity-sts',maker:'Abbott',category:'cardiac',models:['PM1272','PM2272','PM1172','PM2172','PM1282','PM2282','PM1182','PM2182'],
-   accepted_leads:{'2088TC':[46,52,58],'1944':[46,52],'1948':[52,58]},field_t:[1.5,3],spatial_gradient_t_m:30,gradient_slew_t_m_s:200,mode:'normal',
+   technical_profile:'abbott-pacing-2022',accepted_leads:{'2088TC':[46,52,58],'1944':[46,52],'1948':[52,58]},field_t:[1.5,3],spatial_gradient_t_m:30,gradient_slew_t_m_s:200,mode:'normal',
    source:'https://manuals.eifu.abbott/content/dam/av/manuals-eifu/global/AM/en/ARTEN600159320_A.PDF',region:'Document global anglais ; applicabilité France à confirmer',reviewed:'2026-10-07',document_version:'ARTEN600159320 A — 2022-08',pages:'Pages imprimées 2–6, 8 et 15–18',
    note:'Sondes : 2088TC 46/52/58 cm, 1944 46/52 cm, 1948 52/58 cm. Mode normal, corps entier dans cette version. Champ 1,5 ou 3 T ; gradient spatial ≤30 T/m ; slew rate ≤200 T/m/s par axe. Vérifier émission RF CP et antenne autorisée, tunnel cylindrique horizontal, décubitus dorsal bras le long du corps, implantation pectorale, programmation IRM et surveillance. Pas de limite de durée dans cette version. Exclusions et contrôle cardiologique restent à vérifier ; ne pas substituer ce document à la notice locale.',complete:false},
   {id:'cochlear-ci600',maker:'Cochlear',category:'cochlear',models:['CI612','CI622','CI624','CI632'],field_t:[1.5,3],
@@ -87,6 +87,18 @@ function evaluateDmiWorkflow(components,exam,inventoryComplete){
       if(rule[key]===undefined)continue;
       const actual=Number(exam[key]),valid=exam[key]!==undefined&&exam[key]!==null&&exam[key]!==''&&Number.isFinite(actual)&&actual>=0;
       findings.push({component:label,criterion:name,status:!valid?'inconnu':(key==='wait_min'?actual>=rule[key]:actual<=rule[key])?'respecté':'non respecté',detail:(key==='wait_min'?'Minimum : ':'Maximum : ')+rule[key]});
+    }
+    if(rule.technical_profile==='abbott-pacing-2022'){
+      const check=(key,criterion,accepted,detail)=>findings.push({component:label,criterion,status:!exam[key]?'inconnu':accepted.includes(exam[key])?'respecté':'non respecté',detail});
+      check('bore','Tunnel et orientation',['horizontal_cylindrical'],'Tunnel cylindrique, champ horizontal');
+      check('nucleus','Noyau exploré',['hydrogen'],'Hydrogène uniquement');
+      check('position','Position du patient',['supine_arms_sides'],'Décubitus dorsal, bras le long du corps');
+      check('implant_location','Implantation du boîtier',['pectoral'],'Région pectorale droite ou gauche');
+      if(valid&&rule.field_t.includes(field)){
+        check('transmit_coil','Antenne RF émettrice',field===3?['body']:['body','local_head','local_upper','local_lower'],field===3?'3 T : antenne corps intégrée émettrice':'1,5 T : corps intégré ou antenne émission/réception tête ou membre');
+        // CP is explicit at 3 T and for local transmit/receive coils at 1.5 T.
+        if(field===3||['local_head','local_upper','local_lower'].includes(exam.transmit_coil))check('rf_polarization','Polarisation RF',['cp'],'Émission circulaire CP');
+      }else missing.push(label+' : antenne RF non évaluée, champ documenté à confirmer');
     }
     if(rule.mode)findings.push({component:label,criterion:'Mode de fonctionnement',status:!exam.mode?'inconnu':exam.mode===rule.mode?'respecté':'non respecté',detail:'Mode normal cité par la source'});
   }

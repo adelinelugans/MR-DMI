@@ -35,3 +35,7 @@ Référence ARTEN600159320 A, août 2022, document anglais global. Pages imprim�
 5. Revue du cadre applicable à l'usage prévu et validation du service avant diffusion clinique. Une validation de tests logiciels ne constitue pas cette revue.
 
 Les fonctions d'historique patient, d'authentification et de veille automatique avec validation documentaire ne sont pas livrées. Aucun statut « examen autorisé » n'est produit.
+
+## Version 2026-10-07.11 — contrôle technique conditionnel
+
+Le sous-ensemble Abbott pacemaker déjà intégré compare aussi tunnel horizontal cylindrique, noyau hydrogène, position dorsale bras le long du corps et implantation pectorale. Antenne émettrice corps à 3 T ; corps ou émission/réception locale tête/membre à 1,5 T. CP obligatoire à 3 T et pour les antennes locales à 1,5 T. Source : ARTEN600159320 A, pages imprimées 2–6. Les champs restent inconnus par défaut. Ces règles ne sont pas extrapolées aux implants cochléaires ou neurostimulateurs. Les restrictions cliniques, la notice France et la revue indépendante restent à compléter : aucun résultat n’autorise l’IRM. Tests : champs manquants, antenne locale à 3 T, CP, autres géométries/noyaux/positions/sites, champ hors fiche.
