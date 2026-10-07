@@ -27,7 +27,7 @@
 <body>
 <header><h1>MR-DMI</h1><p>Lecture assistée des cartes et comptes rendus d'implantation</p></header>
 <main>
-  <p class="hint">Version lecture 2026-10-07.5</p>
+  <p class="hint">Version lecture 2026-10-07.6</p>
   <section id="install-help">
     <h2>Installer MR-DMI sur le téléphone</h2>
     <p class="hint">Dans Chrome sur Android, ouvrez le menu ⋮ puis « Installer l’application » ou « Ajouter à l’écran d’accueil ». Vous pourrez ensuite l’ouvrir par son icône. Une connexion Internet reste nécessaire pour la recherche et la comparaison.</p>
@@ -350,12 +350,12 @@
     const box=document.createElement('fieldset');box.className='result';
     const title=document.createElement('legend');title.textContent='Composant '+(componentRows.length+1);box.append(title);
     const fields={};
-    for(const [key,label] of [['category','Type'],['maker','Fabricant du composant'],['model','Référence du composant'],['length_cm','Longueur (cm), si applicable']]){
+    for(const [key,label] of [['system','Système associé (même numéro pour boîtier et sondes)'],['category','Type'],['maker','Fabricant du composant'],['model','Référence du composant'],['length_cm','Longueur (cm), si applicable']]){
       const wrap=document.createElement('label');wrap.textContent=label;
       const input=document.createElement(key==='category'?'select':'input');input.autocomplete='off';
       if(key==='category')for(const [value,text] of componentTypes){const o=document.createElement('option');o.value=value;o.textContent=text;input.append(o);}
       if(key==='length_cm'){input.type='number';input.min='0';input.step='any';}
-      input.value=seed[key]|| (key==='category'?'other':'');wrap.append(input);box.append(wrap);fields[key]=input;
+      input.value=seed[key]|| (key==='category'?'other':key==='system'?'1':'');wrap.append(input);box.append(wrap);fields[key]=input;
       input.addEventListener('change',()=>{$('workflow-result').replaceChildren();});
     }
     const checkWrap=document.createElement('label');const check=document.createElement('input');check.type='checkbox';check.style.width='auto';checkWrap.append(check,document.createTextNode(' Référence vérifiée sur la carte complète ou la traçabilité'));box.append(checkWrap);fields.confirmed=check;check.addEventListener('change',()=>{$('workflow-result').replaceChildren();});
@@ -369,7 +369,7 @@
     if(!ids.models.length){$('workflow-result').textContent='Aucune référence lue : ajoutez les composants à partir de la traçabilité.';return;}
     for(const model of ids.models){
       const exists=componentRows.some(r=>r.fields.model.value===model);if(exists)continue;
-      const category=ids.families.includes(model)?'lead':/^CI\d/i.test(model)?'cochlear':/^OMNIPOD/i.test(model)?'pump':/^PM|^A\d/i.test(model)?'cardiac':'other';
+      const category=ids.families.includes(model)||/^(2088TC|1944|1948)/i.test(model)?'lead':/^CI\d/i.test(model)?'cochlear':/^OMNIPOD/i.test(model)?'pump':/^PM|^A\d/i.test(model)?'cardiac':'other';
       addComponent({model,maker:ids.makers.length===1?ids.makers[0]:'',category});
     }
     $('workflow-result').textContent='Références importées sans confirmation. Un nom identique peut désigner plusieurs composants : ajoutez chaque exemplaire et vérifiez les associations.';
@@ -389,7 +389,7 @@
     for(const record of evaluation.sources){
       const box=document.createElement('div');box.className='result';
       const t=document.createElement('p');t.textContent='Résumé documentaire : '+record.maker+' '+components[record.component].model+' — '+record.region+' — consulté le '+record.reviewed;
-      const note=document.createElement('p');note.textContent=record.note;
+      const note=document.createElement('p');note.textContent=record.note+(record.document_version?' — Notice : '+record.document_version+' ; '+record.pages:'');
       const link=document.createElement('a');link.href=record.source;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Ouvrir la source officielle ; vérifier la notice applicable';box.append(t,note,link);out.append(box);
     }
     if($('role').value==='technologist')for(const f of evaluation.findings)p(f.component+' — '+f.criterion+' : '+f.status+' — '+f.detail);

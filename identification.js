@@ -25,6 +25,7 @@ function extractIdentifiers(text) {
   for(const match of text.matchAll(/\bCI(?:612|622|624|632)\b/gi))if(!models.includes(match[0].toUpperCase()))models.push(match[0].toUpperCase());
   const pod=text.match(/\bOmnipod[ \t]+(5|DASH)\b/i);
   if(pod&&!models.includes('OMNIPOD '+pod[1].toUpperCase()))models.push('OMNIPOD '+pod[1].toUpperCase());
+  for(const match of text.matchAll(/\b(?:PM(?:1272|2272|1172|2172|1282|2282|1182|2182)|2088TC|1944|1948)\b(?![-/])/gi))if(!models.includes(match[0].toUpperCase()))models.push(match[0].toUpperCase());
   const di = text.match(/\(01\)\s*(\d{14})(?!\d)/);
   return {makers, models, families, serials, serialCandidates, udi: di ? di[1] : ''};
 }
@@ -32,6 +33,10 @@ function extractIdentifiers(text) {
 
 /* Documentary summaries. They are deliberately incomplete, never an exam authorization. */
 const DOCUMENTED_RULES = [
+  {id:'abbott-assurity-endurity-sts',maker:'Abbott',category:'cardiac',models:['PM1272','PM2272','PM1172','PM2172','PM1282','PM2282','PM1182','PM2182'],
+   accepted_leads:{'2088TC':[46,52,58],'1944':[46,52],'1948':[52,58]},field_t:[1.5,3],spatial_gradient_t_m:30,gradient_slew_t_m_s:200,mode:'normal',
+   source:'https://manuals.eifu.abbott/content/dam/av/manuals-eifu/global/AM/en/ARTEN600159320_A.PDF',region:'Document global anglais ; applicabilité France à confirmer',reviewed:'2026-10-07',document_version:'ARTEN600159320 A — 2022-08',pages:'Pages imprimées 2–6, 8 et 15–18',
+   note:'Sondes : 2088TC 46/52/58 cm, 1944 46/52 cm, 1948 52/58 cm. Mode normal, corps entier dans cette version. Champ 1,5 ou 3 T ; gradient spatial ≤30 T/m ; slew rate ≤200 T/m/s par axe. Vérifier émission RF CP et antenne autorisée, tunnel cylindrique horizontal, décubitus dorsal bras le long du corps, implantation pectorale, programmation IRM et surveillance. Pas de limite de durée dans cette version. Exclusions et contrôle cardiologique restent à vérifier ; ne pas substituer ce document à la notice locale.',complete:false},
   {id:'cochlear-ci600',maker:'Cochlear',category:'cochlear',models:['CI612','CI622','CI624','CI632'],field_t:[1.5,3],
    source:'https://www.cochlear.com/global/en/mri/mri-nucleus',region:'International ; notice du pays requise',reviewed:'2026-10-07',
    note:'Aimant en place pour les modèles cités ; consulter le guide national pour toutes les autres conditions.',complete:false},
@@ -44,23 +49,34 @@ const DOCUMENTED_RULES = [
 ];
 function evaluateDmiWorkflow(components,exam,inventoryComplete){
   const rows=Array.isArray(components)?components:[];
-  const findings=[],sources=[],missing=[];
+  const findings=[],sources=[],missing=[],coveredLeads=new Set();
+  const system=c=>String(c.system||'1').trim();
   if(!rows.length)missing.push('Aucun dispositif renseigné');
   if(inventoryComplete!==true)missing.push('Inventaire de tous les dispositifs et composants non confirmé');
   const normal=v=>String(v||'').trim().toUpperCase();
-  for(const [index,c] of rows.entries()){
+  for(const [index,c] of [...rows.entries()].sort((a,b)=>(a[1].category==='lead')-(b[1].category==='lead'))){
     const label='Composant '+(index+1);
+    if(coveredLeads.has(index))continue;
     if(!c.confirmed){missing.push(label+' : référence non confirmée sur la traçabilité');continue;}
     if(!c.maker||!c.model){missing.push(label+' : fabricant ou référence manquant');continue;}
     const rule=DOCUMENTED_RULES.find(r=>normal(r.maker)===normal(c.maker)&&r.category===c.category&&r.models.includes(normal(c.model)));
     if(!rule){missing.push(label+' : aucune condition exacte intégrée pour '+c.model);continue;}
+    if(rule.accepted_leads){
+      const attached=rows.map((x,i)=>({x,i})).filter(({x})=>system(x)===system(c)&&x.category==='lead');
+      const generators=rows.filter(x=>system(x)===system(c)&&['cardiac','neuro'].includes(x.category));
+      const valid=attached.length>0&&generators.length===1&&attached.every(({x})=>x.confirmed&&normal(x.maker)===normal(rule.maker)&&(rule.accepted_leads[normal(x.model)]||[]).includes(Number(x.length_cm)));
+      if(!valid){missing.push(label+' : association non établie ; un boîtier et toutes ses sondes avec références et longueurs exactes sont requis');continue;}
+      if(rows.some(x=>system(x)===system(c)&&x.category==='extension')){missing.push(label+' : extension / adaptateur, association non couverte');continue;}
+      for(const {i} of attached)coveredLeads.add(i);
+    }
     if(rule.lead_model){
-      const leads=rows.filter(x=>x.category==='lead');
+      const leads=rows.filter(x=>system(x)===system(c)&&x.category==='lead');
       if(!leads.length||leads.some(x=>!x.confirmed||normal(x.maker)!==normal(rule.maker)||normal(x.model)!==rule.lead_model||Number(x.length_cm)!==rule.lead_length_cm)){
         missing.push(label+' : chaque électrode doit être confirmée (modèle '+rule.lead_model+', longueur '+rule.lead_length_cm+' cm)');continue;
       }
-      if(rows.some(x=>x.category==='extension')){missing.push(label+' : extension présente, association non couverte par cette fiche');continue;}
+      if(rows.some(x=>system(x)===system(c)&&x.category==='extension')){missing.push(label+' : extension présente, association non couverte par cette fiche');continue;}
     }
+    if(rule.lead_model)rows.forEach((x,i)=>{if(system(x)===system(c)&&x.category==='lead')coveredLeads.add(i);});
     sources.push({component:index,...rule});
     missing.push(label+' : résumé documentaire incomplet, manuel applicable et restrictions restantes à vérifier');
     if(rule.external){findings.push({component:label,criterion:'Dispositif externe',status:'préparation requise',detail:rule.note});continue;}
