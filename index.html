@@ -128,6 +128,30 @@
       }
     });
   }
+  async function prepareOcrImage(imageFile){
+    const source=await new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(reader.result);
+      reader.onerror=()=>reject(Error('Impossible de lire le fichier sélectionné. Sélectionnez de nouveau la photo.'));
+      reader.readAsDataURL(imageFile);
+    });
+    const image=await new Promise((resolve,reject)=>{
+      const img=new Image();
+      img.onload=()=>resolve(img);
+      img.onerror=()=>reject(Error('Format d’image non lisible. Utilisez une photo JPEG ou PNG.'));
+      img.src=source;
+    });
+    if(!image.naturalWidth||!image.naturalHeight)throw Error('L’image sélectionnée est vide.');
+    const scale=Math.min(1,2400/Math.max(image.naturalWidth,image.naturalHeight));
+    const canvas=document.createElement('canvas');
+    canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));
+    canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+    const context=canvas.getContext('2d');
+    if(!context)throw Error('Impossible de préparer l’image sur ce navigateur.');
+    context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);
+    context.drawImage(image,0,0,canvas.width,canvas.height);
+    return canvas.toDataURL('image/png');
+  }
   async function readPdf(file,getWorker){
     if(!window.pdfjsLib)throw Error('Le lecteur PDF n’a pas chargé. Vérifiez la connexion Internet.');
     pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -159,7 +183,8 @@
       }else if(file.type==='text/plain'||/\.txt$/i.test(file.name)){
         $('raw').value=await file.text();
       }else if(file.type.startsWith('image/')){
-        $('raw').value=(await (await getWorker()).recognize(file)).data.text;
+        const imageData=await prepareOcrImage(file);
+        $('raw').value=(await (await getWorker()).recognize(imageData)).data.text;
       }else throw Error('Choisissez une image, un PDF ou un fichier texte.');
       if(!$('raw').value.trim())throw Error('Aucun texte lisible détecté. Prenez une photo nette, de face et rapprochée, ou collez le texte du document.');
       $('analyze').click();
