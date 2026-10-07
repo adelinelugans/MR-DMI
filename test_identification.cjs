@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const {extractIdentifiers} = require('./identification.js');
-assert.deepEqual(extractIdentifiers('Medtronic\nModel: A2DR01\nSerial: 998877'), {makers:['Medtronic'],models:['A2DR01'],families:[],serials:['998877'],udi:''});
+assert.deepEqual(extractIdentifiers('Medtronic\nModel: A2DR01\nSerial: 998877'), {makers:['Medtronic'],models:['A2DR01'],families:[],serials:['998877'],serialCandidates:[],udi:''});
 assert.deepEqual(extractIdentifiers('Abbott Model: PM2272\nREF: 2088TC-52').models,['PM2272','2088TC-52']);
 assert.equal(extractIdentifiers('Séjour 01234567890123').udi,'');
 assert.equal(extractIdentifiers('(01)01234567890123(21)1234').udi,'01234567890123');
@@ -14,3 +14,6 @@ assert.deepEqual(card.serials,['EEL414832','EEM330008']);
 assert.deepEqual(extractIdentifiers('Omnipod Model: 5').makers,['Insulet']);
 assert.deepEqual(extractIdentifiers('MEDel').makers,['MED-EL']);
 
+
+assert.deepEqual(extractIdentifiers('Modèle\nli').models,[]);
+assert.deepEqual(extractIdentifiers('N° de série\n|\nEEL414832').serialCandidates,['EEL414832']);

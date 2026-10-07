@@ -27,7 +27,7 @@
 <body>
 <header><h1>MR-DMI</h1><p>Lecture assistée des cartes et comptes rendus d'implantation</p></header>
 <main>
-  <p class="hint">Version lecture 2026-10-07.2</p>
+  <p class="hint">Version lecture 2026-10-07.3</p>
   <section id="install-help">
     <h2>Installer MR-DMI sur le téléphone</h2>
     <p class="hint">Dans Chrome sur Android, ouvrez le menu ⋮ puis « Installer l’application » ou « Ajouter à l’écran d’accueil ». Vous pourrez ensuite l’ouvrir par son icône. Une connexion Internet reste nécessaire pour la recherche et la comparaison.</p>
@@ -143,7 +143,7 @@
       img.src=source;
     });
     if(!image.naturalWidth||!image.naturalHeight)throw Error('L’image sélectionnée est vide.');
-    const scale=Math.min(2,3000/Math.max(image.naturalWidth,image.naturalHeight));
+    const scale=Math.min(1,2400/Math.max(image.naturalWidth,image.naturalHeight));
     const canvas=document.createElement('canvas');
     canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));
     canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
@@ -155,7 +155,7 @@
   }
   function evidenceScore(text){
     const ids=extractIdentifiers(text);
-    return ids.makers.length*3+ids.models.length*3+ids.serials.length*2+ids.families.length*4;
+    return ids.makers.length*3+ids.models.length*3+ids.serials.length*2+ids.serialCandidates.length+ids.families.length*4;
   }
   async function recognizeImage(canvas,worker){
     await worker.setParameters({tessedit_pageseg_mode:'3'});
@@ -164,11 +164,21 @@
     $('ocr-status').textContent='Seconde lecture des blocs du document…';
     await worker.setParameters({tessedit_pageseg_mode:'11'});
     const second=(await worker.recognize(canvas)).data;
+    // A smaller image reduces screen moiré; do not guess or repair identifier characters.
+    const reduced=document.createElement('canvas');
+    const factor=Math.min(1,1024/Math.max(canvas.width,canvas.height));
+    reduced.width=Math.round(canvas.width*factor);reduced.height=Math.round(canvas.height*factor);
+    const ctx=reduced.getContext('2d');ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+    ctx.drawImage(canvas,0,0,reduced.width,reduced.height);
+    const pixels=ctx.getImageData(0,0,reduced.width,reduced.height);
+    for(let i=0;i<pixels.data.length;i+=4){const gray=Math.round(.299*pixels.data[i]+.587*pixels.data[i+1]+.114*pixels.data[i+2]);pixels.data[i]=pixels.data[i+1]=pixels.data[i+2]=gray;}
+    ctx.putImageData(pixels,0,0);
+    const third=(await worker.recognize(reduced)).data;
     const best=evidenceScore(second.text)>evidenceScore(first.text) ? second :
       evidenceScore(second.text)<evidenceScore(first.text) ? first :
       (second.confidence>first.confidence ? second : first);
     await worker.setParameters({tessedit_pageseg_mode:'3'});
-    return best.text;
+    return evidenceScore(third.text)>evidenceScore(best.text)?third.text:best.text;
   }
   async function readPdf(file,getWorker){
     if(!window.pdfjsLib)throw Error('Le lecteur PDF n’a pas chargé. Vérifiez la connexion Internet.');
@@ -206,7 +216,7 @@
       }else throw Error('Choisissez une image, un PDF ou un fichier texte.');
       if(!$('raw').value.trim())throw Error('Aucun texte lisible détecté. Prenez une photo nette, de face et rapprochée, ou collez le texte du document.');
       $('analyze').click();
-      $('ocr-status').textContent=evidenceScore($('raw').value)>0?'Lecture terminée. Vérifiez chaque référence sur le document original.':'Texte extrait sans dispositif reconnu. Essayez une capture d’écran directe ou une photo rapprochée des références ; aucune condition IRM établie.';
+      $('ocr-status').textContent=evidenceScore($('raw').value)>0?'Lecture terminée avec indices partiels. Vérifiez tous les caractères des références et des séries sur le document original.':'Texte extrait sans dispositif reconnu. Essayez une capture d’écran directe ou une photo rapprochée des références ; aucune condition IRM établie.';
     }catch(err){$('ocr-status').textContent='Lecture impossible : '+ocrErrorMessage(err);}
     finally{try{if(worker)await worker.terminate();}catch(error){console.warn('OCR cleanup failed');}finally{$('read').disabled=!file;}}
   });
@@ -223,6 +233,7 @@
     if(identifiers.makers.length)add('Fabricants repérés :',identifiers.makers.join(', ')+' — à confirmer.');
     if(identifiers.models.length)add('Références repérées :',identifiers.models.join(', ')+' — à confirmer, plusieurs composants possibles.');
     if(identifiers.serials.length)add('Numéros de série lus :',identifiers.serials.join(', ')+' — à vérifier ; conservés dans cette page uniquement.');
+    if(identifiers.serialCandidates.length)add('Identifiants isolés à vérifier :',identifiers.serialCandidates.join(', ')+' — lecture OCR non confirmée ; ne pas les utiliser comme références exactes.');
     if(identifiers.families.length)add('Famille de sonde :',identifiers.families.join(', ')+' ; référence numérique et longueur non établies par ce nom.');
     if(/\bATS\b/i.test(s))add('Mention lue :','ATS (à confirmer sur le document original).');
     if(/\bBentall\b/i.test(s))add('Intervention lue :','Bentall ; vérifier séparément la valve et le conduit/greffon éventuel.');

@@ -103,7 +103,7 @@
     ],
     "source_url": "https://www.cochlear.com/global/en/mri/mri-nucleus",
     "scope": "Identifier le modèle implanté, le champ, la gestion de l’aimant et les accessoires requis dans la notice du pays applicable.",
-    "source_type": "page fabricant, famille",
+    "source_type": "portail fabricant ; notice exacte à rechercher",
     "mri_conditions": null,
     "status": "conditions non établies — notice exacte et validation du service requises"
   },
@@ -118,7 +118,7 @@
     ],
     "source_url": "https://blog.medel.com/technology/the-complete-guide-to-mri-with-a-cochlear-implant/",
     "scope": "Informations générales fabricant ; obtenir les instructions d’utilisation du modèle exact avant toute comparaison.",
-    "source_type": "page fabricant, famille",
+    "source_type": "portail fabricant ; notice exacte à rechercher",
     "mri_conditions": null,
     "status": "conditions non établies — notice exacte et validation du service requises"
   },
@@ -135,7 +135,7 @@
     ],
     "source_url": "https://www.neuromodulation.abbott/int/en/healthcare-professionals/mri-support.html",
     "scope": "Identifier générateur, électrodes, extensions, positions d’implantation et mode IRM dans le guide du système complet.",
-    "source_type": "page fabricant, famille",
+    "source_type": "portail fabricant ; notice exacte à rechercher",
     "mri_conditions": null,
     "status": "conditions non établies — notice exacte et validation du service requises"
   },
@@ -149,9 +149,8 @@
     ],
     "source_url": "https://www.omnipod.com/fr-fr/ressources-pour-les-utilisateurs/numerique",
     "scope": "Dispositif externe : consulter le guide exact pour les exigences de retrait et organiser la prise en charge du traitement avec l’équipe soignante.",
-    "source_type": "page fabricant, famille",
+    "source_type": "portail fabricant ; notice exacte à rechercher",
     "mri_conditions": null,
     "status": "conditions non établies — notice exacte et validation du service requises"
   }
 ]
-
