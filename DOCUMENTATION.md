@@ -26,3 +26,26 @@ séparées. Les limites numériques ne sont pas encore alimentées automatiqueme
 L'utilisateur choisit séparément l'appareil photo ou un fichier existant (image, PDF, texte). Le PDF texte est lu dans le navigateur ; les pages image passent par OCR dans le navigateur. Le document et les données patient ne sont pas transmis au serveur. L'analyse locale ne transmet au catalogue que des termes techniques reconnus. Après une recherche UDI-DI, le fabricant et le modèle trouvés dans GUDID sont affichés et les sources fabricant connues sont recherchées automatiquement.
 
 Le catalogue lie des familles à des sources officielles, pas des conditions IRM à un patient. Il ne contient actuellement aucune notice IRM de modèle exact avec paramètres structurés et vérifiés. Par conséquent l'interface indique « aucun paramètre vérifié » et n'affiche aucun réglage machine automatique. L'identification d'un modèle ou d'un système complet et la validation clinique exigent la notice applicable et le protocole du service. Le numéro de série seul ne constitue pas un UDI-DI et ne permet pas une recherche universelle publique.
+
+# Recherche fabricant et modèle (octobre 2026)
+
+Le bouton « Rechercher par fabricant et modèle » appelle `/api/search` :
+requête openFDA/GUDID sur fabricant + modèle exact, référence catalogue exacte
+ou marque exacte. Les résultats restent des candidats. Une panne du fournisseur
+est distinguée d'une absence dans ce catalogue américain. Aucun numéro de série
+ni document complet n'est envoyé par cette recherche.
+
+L'analyse locale relève les noms de fabricants, les champs explicitement
+étiquetés modèle/REF et les UDI GS1 `(01)`. Elle laisse les champs vides en cas
+de fabricants ou modèles multiples ; chaque composant doit être recherché
+séparément. L'OCR peut mal lire une référence : confirmation sur l'original requise.
+
+Les portails officiels Medtronic FR, Abbott US et BIOTRONIK complètent les trois
+pistes initiales. Ils ne constituent pas une récupération automatique du PDF
+exact ni une base vérifiée de conditions IRM. Le bouton de recherche ne constitue
+pas une validation clinique, et cette correction ne fournit pas encore des
+réglages Siemens automatiques. L'objectif 70–80 % reste à mesurer sur des cartes
+représentatives anonymisées.
+
+Validation : `python -m unittest -v` ; `node test_identification.cjs`.
+Référence API : https://open.fda.gov/apis/device/udi/searchable-fields/

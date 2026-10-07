@@ -1,6 +1,8 @@
 from flask import Flask,request,jsonify,send_from_directory
 import sqlite3,urllib.request,urllib.parse,json,datetime
 from engine import search_catalog,compare_conditions
+from identification import model_query, candidates
+from urllib.error import HTTPError
 A=Flask(__name__,static_folder="web")
 def con():
  c=sqlite3.connect("mrdmi.db");c.row_factory=sqlite3.Row;c.execute("CREATE TABLE IF NOT EXISTS devices(di TEXT PRIMARY KEY, company TEXT, brand TEXT, model TEXT, mri TEXT, source TEXT, raw TEXT)");c.commit();return c
@@ -21,6 +23,18 @@ def dev():
   except:return jsonify(ok=False,error="DMI non retrouvé automatiquement"),404
  c.execute("INSERT OR REPLACE INTO devices VALUES(?,?,?,?,?,?,?)",(x["di"],x["company"],x["brand"],x["model"],x["mri"],x["source"],json.dumps(x)));c.commit()
  return jsonify(ok=True,cached=False,device=x)
+@A.get("/api/search")
+def search_devices():
+ try:
+  query=model_query(request.args.get("maker", ""), request.args.get("model", ""))
+ except ValueError as error:return jsonify(ok=False,error=str(error)),400
+ try:
+  payload=get("https://api.fda.gov/device/udi.json?"+query)
+ except HTTPError as error:
+  if error.code==404:return jsonify(ok=True,candidates=[],note="Aucune référence retrouvée dans le catalogue américain ; cela ne détermine pas la compatibilité IRM.")
+  return jsonify(ok=False,error="Catalogue indisponible. Réessayez ultérieurement."),502
+ except (OSError,ValueError):return jsonify(ok=False,error="Catalogue indisponible. Réessayez ultérieurement."),502
+ return jsonify(ok=True,candidates=candidates(payload),note="Confirmez chaque référence sur la carte et identifiez tous les composants. Le statut GUDID ne remplace pas la notice IRM.")
 @A.get("/api/library")
 def lib():return jsonify(devices=[dict(x) for x in con().execute("SELECT di,company,brand,model,mri,source FROM devices").fetchall()])
 @A.get("/api/catalog")
@@ -35,6 +49,8 @@ def compare():
  except (ValueError,TypeError,OverflowError):return jsonify(error="Paramètres de comparaison invalides"),400
 @A.get("/")
 def home():return send_from_directory(".","index.html")
+@A.get("/identification.js")
+def identification_script():return send_from_directory(".","identification.js",mimetype="application/javascript")
 @A.get("/manifest.webmanifest")
 def manifest():return send_from_directory(".","manifest.webmanifest",mimetype="application/manifest+json")
 @A.get("/sw.js")
