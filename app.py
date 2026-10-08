@@ -1,9 +1,14 @@
 from flask import Flask,request,jsonify,send_from_directory
-import sqlite3,urllib.request,urllib.parse,json,datetime,re
+import sqlite3,urllib.request,urllib.parse,json,datetime,re,os
 from engine import search_catalog,compare_conditions
 from identification import model_query, candidates
 from urllib.error import HTTPError
 A=Flask(__name__,static_folder="web")
+# Conventional WSGI entry point; retain A for existing Render commands/tests.
+app=A
+@A.get("/healthz")
+def health():
+ return jsonify(ok=True,revision=os.environ.get("RENDER_GIT_COMMIT","unknown"))
 def con():
  c=sqlite3.connect("mrdmi.db");c.row_factory=sqlite3.Row;c.execute("CREATE TABLE IF NOT EXISTS devices(di TEXT PRIMARY KEY, company TEXT, brand TEXT, model TEXT, mri TEXT, source TEXT, raw TEXT)");c.commit();return c
 def get(u):
