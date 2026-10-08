@@ -29,7 +29,7 @@
 <body>
 <header><h1>MR-DMI</h1><p>Lecture assistée des cartes et comptes rendus d'implantation</p></header>
 <main>
-  <p class="hint">Version lecture 2026-10-08.16</p>
+  <p class="hint">Version lecture 2026-10-08.17</p>
   <button id="new-dossier" type="button">Nouveau dossier</button>
   <p id="reset-status" class="hint" role="status" aria-live="polite"></p>
   <section>
@@ -418,22 +418,28 @@
     invalidateReport();
     const box=document.createElement('fieldset');box.className='result';
     const title=document.createElement('legend');title.textContent='Composant '+(componentRows.length+1);box.append(title);
+    const editor=document.createElement('details'),editSummary=document.createElement('summary');editSummary.textContent='Modifier / compléter ce dispositif';editor.append(editSummary);box.append(editor);
     const fields={},conditionalWraps=[];
     for(const [key,label] of [['system','Système associé (même numéro pour boîtier et sondes)'],['category','Type'],['maker','Fabricant du composant'],['model','Référence du composant'],['length_cm','Longueur (cm), si applicable']]){
       const wrap=document.createElement('label');wrap.textContent=label;
       const input=document.createElement(key==='category'?'select':'input');input.autocomplete='off';
       if(key==='category')for(const [value,text] of componentTypes){const o=document.createElement('option');o.value=value;o.textContent=text;input.append(o);}
       if(key==='length_cm'){input.type='number';input.min='0';input.step='any';}
-      input.value=seed[key]|| (key==='category'?'other':key==='system'?'1':'');wrap.append(input);box.append(wrap);fields[key]=input;
+      input.value=seed[key]|| (key==='category'?'other':key==='system'?'1':'');wrap.append(input);editor.append(wrap);fields[key]=input;
       input.addEventListener('input',invalidateReport);input.addEventListener('change',invalidateReport);
     }
     for(const [key,label,options] of [['removed','Pompe externe et éléments associés retirés (si applicable)',[['','Non confirmé'],['yes','Oui'],['no','Non']]],['magnet','Aimant auditif (si applicable)',[['','Non confirmé'],['present','En place'],['removed','Retiré chirurgicalement']]],['mri_kit','Kit IRM Cochlear appliqué (si requis)',[['','Non confirmé'],['yes','Oui'],['no','Non']]]]){
       const wrap=document.createElement('label');wrap.textContent=label;const input=document.createElement('select');
       for(const [value,text] of options){const o=document.createElement('option');o.value=value;o.textContent=text;input.append(o);}input.value=seed[key]||'';wrap.append(input);box.append(wrap);fields[key]=input;conditionalWraps.push([key,wrap]);input.addEventListener('change',invalidateReport);
     }
-    const updateFields=()=>{for(const [key,wrap] of conditionalWraps)wrap.hidden=fields.category.value!==(key==='removed'?'pump':'cochlear');};fields.category.addEventListener('change',updateFields);updateFields();
+    const updateFields=()=>{
+      title.textContent='Dispositif — '+(fields.maker.value||'marque à préciser')+' '+(fields.model.value||'référence à préciser');
+      fields.length_cm.parentElement.hidden=fields.category.value!=='lead';
+      fields.system.parentElement.hidden=!['cardiac','neuro','lead','extension'].includes(fields.category.value);
+      for(const [key,wrap] of conditionalWraps)wrap.hidden=key==='removed'?fields.category.value!=='pump':key==='magnet'?fields.category.value!=='cochlear':!(fields.category.value==='cochlear'&&/^CI5/i.test(fields.model.value)&&$('workflow-field').value==='1.5'&&fields.magnet.value==='present');
+    };for(const key of ['category','model','maker','magnet'])fields[key].addEventListener('change',updateFields);$('workflow-field').addEventListener('change',updateFields);updateFields();
     const checkWrap=document.createElement('label');const check=document.createElement('input');check.type='checkbox';check.style.width='auto';checkWrap.append(check,document.createTextNode(' Référence vérifiée sur la carte complète ou la traçabilité'));box.append(checkWrap);fields.confirmed=check;check.addEventListener('change',()=>{invalidateReport();});
-    const remove=document.createElement('button');remove.type='button';remove.textContent='Retirer ce composant';remove.addEventListener('click',()=>{const i=componentRows.findIndex(r=>r.box===box);if(i>=0)componentRows.splice(i,1);box.remove();invalidateReport();componentRows.forEach((r,i)=>r.box.querySelector('legend').textContent='Composant '+(i+1));});box.append(remove);
+    const remove=document.createElement('button');remove.type='button';remove.textContent='Retirer ce composant';remove.addEventListener('click',()=>{const i=componentRows.findIndex(r=>r.box===box);if(i>=0)componentRows.splice(i,1);box.remove();invalidateReport();});box.append(remove);
     componentRows.push({box,fields});$('components').append(box);refreshUsefulSettings();
   }
   function getComponents(){return componentRows.map(({fields})=>Object.fromEntries(Object.entries(fields).map(([k,f])=>[k,k==='confirmed'?f.checked:f.value.trim()])));}
@@ -490,7 +496,7 @@
     const evaluation=evaluateDmiWorkflow(components,exam,$('complete-inventory').value==='yes');
     const out=$('workflow-result');out.replaceChildren();
     const p=text=>{const el=document.createElement('p');el.textContent=text;out.append(el);};
-    p('MR-DMI — synthèse technique — version 2026-10-08.16 — '+new Date().toLocaleString('fr-FR'));
+    p('MR-DMI — synthèse technique — version 2026-10-08.17 — '+new Date().toLocaleString('fr-FR'));
     if(demoMode)p('EXEMPLE FICTIF — aucune donnée patient — paramètres de démonstration.');
     p('Vérification partielle ; aucune autorisation d’examen.');
     p(evaluation.status);
