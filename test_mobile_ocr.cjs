@@ -5,17 +5,19 @@ const vm = require('node:vm');
 const fs = require('node:fs');
 const html = fs.readFileSync('index.html', 'utf8');
 const functions = [
+  ['loadEngine', '  let installPrompt;'],
   ['ocrErrorMessage', '  async function createOcrWorker'],
   ['prepareOcrImage', '  function evidenceScore'],
   ['readPdf', "  $('read').addEventListener"]
 ].map(([name, end]) => {
   const start = html.indexOf('function ' + name);
   assert.ok(start >= 0 && html.indexOf(end, start) > start);
-  return (name === 'ocrErrorMessage' ? '' : 'async ') + html.slice(start, html.indexOf(end, start));
+  return (['ocrErrorMessage','loadEngine'].includes(name) ? '' : 'async ') + html.slice(start, html.indexOf(end, start));
 }).join('\n');
 let dimensions = [4800, 2400], decodeFails = false, readFails = false, hasContext = true;
 const draws = [];
 const context = {
+  engineLoads: new Map(), setTimeout, clearTimeout,
   window: {}, documentEpoch: 7,
   $: () => ({textContent: ''}),
   FileReader: class {
@@ -63,3 +65,5 @@ vm.createContext(context); vm.runInContext(functions, context);
   context.documentEpoch=7; pages=11; await assert.rejects(context.readPdf(file,worker,7), /10 pages/);
   console.log('Mobile OCR regression checks passed (decoding, errors, lazy PDF, stale dossier).');
 })().catch(error => {console.error(error);process.exitCode=1;});
+
+require('./test_launch.cjs');

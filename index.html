@@ -29,7 +29,7 @@
 <body>
 <header><h1>MR-DMI</h1><p>Lecture assistée des cartes et comptes rendus d'implantation</p></header>
 <main>
-  <p class="hint">Version lecture 2026-10-08.17</p>
+  <p class="hint">Version lecture 2026-10-08.18</p>
   <button id="new-dossier" type="button">Nouveau dossier</button>
   <p id="reset-status" class="hint" role="status" aria-live="polite"></p>
   <section>
@@ -152,12 +152,23 @@
   </section>
 </details>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="/identification.js"></script>
 <script>
   const $=id=>document.getElementById(id);
-  if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js',{updateViaCache:'none'}).catch(()=>{});
+  const engineLoads = new Map();
+  function loadEngine(name,url){
+    if(window[name])return Promise.resolve();
+    if(engineLoads.has(name))return engineLoads.get(name);
+    const pending=new Promise((resolve,reject)=>{
+      const script=document.createElement('script');script.src=url;script.async=true;
+      const timer=setTimeout(()=>{script.remove();engineLoads.delete(name);reject(Error('Chargement trop long. Vérifiez Internet puis réessayez.'));},30000);
+      script.onload=()=>{clearTimeout(timer);resolve();};
+      script.onerror=()=>{clearTimeout(timer);script.remove();engineLoads.delete(name);reject(Error('Impossible de charger le moteur de lecture. Vérifiez Internet puis réessayez.'));};
+      document.head.appendChild(script);
+    });
+    engineLoads.set(name,pending);return pending;
+  }
   let installPrompt;
   window.addEventListener('beforeinstallprompt',event=>{
     event.preventDefault();installPrompt=event;$('install').hidden=false;
@@ -189,6 +200,7 @@
     return detail && detail!=='undefined' ? detail : 'Le moteur de lecture a échoué sans préciser la cause. Vérifiez la connexion Internet puis réessayez. Vous pouvez aussi coller le texte du document.';
   }
   async function createOcrWorker(epoch){
+    await loadEngine('Tesseract','https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
     if(!window.Tesseract)throw Error('Le moteur OCR n’a pas chargé. Vérifiez la connexion Internet puis rechargez la page.');
     return Tesseract.createWorker('fra+eng',1,{
       logger:progress=>{
@@ -249,6 +261,7 @@
     return evidenceScore(third.text)>evidenceScore(best.text)?third.text:best.text;
   }
   async function readPdf(file,getWorker,epoch){
+    await loadEngine('pdfjsLib','https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
     if(!window.pdfjsLib)throw Error('Le lecteur PDF n’a pas chargé. Vérifiez la connexion Internet.');
     pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
@@ -496,7 +509,7 @@
     const evaluation=evaluateDmiWorkflow(components,exam,$('complete-inventory').value==='yes');
     const out=$('workflow-result');out.replaceChildren();
     const p=text=>{const el=document.createElement('p');el.textContent=text;out.append(el);};
-    p('MR-DMI — synthèse technique — version 2026-10-08.17 — '+new Date().toLocaleString('fr-FR'));
+    p('MR-DMI — synthèse technique — version 2026-10-08.18 — '+new Date().toLocaleString('fr-FR'));
     if(demoMode)p('EXEMPLE FICTIF — aucune donnée patient — paramètres de démonstration.');
     p('Vérification partielle ; aucune autorisation d’examen.');
     p(evaluation.status);
