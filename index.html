@@ -23,87 +23,36 @@
     .result dt{font-weight:650}.result dd{margin:0 0 .65rem;overflow-wrap:anywhere}
     .error{color:#9d2e25}img{max-width:100%;max-height:250px;object-fit:contain;display:block;margin:.75rem 0}
     @media(max-width:620px){.row{grid-template-columns:1fr}}
-    @media print{body{background:white}body>header,main>section:not(#workflow),#workflow> :not(#workflow-result){display:none!important}main,#workflow{margin:0;padding:0;display:block;max-width:none;border:0;box-shadow:none}#workflow-result{border:0;background:white;white-space:normal}a{overflow-wrap:anywhere}a:after{content:" (" attr(href) ")"}}
+    @media print{body{background:white}body>header,main>section:not(#workflow),main>details,#workflow> :not(#workflow-result){display:none!important}main,#workflow{margin:0;padding:0;display:block;max-width:none;border:0;box-shadow:none}#workflow-result{border:0;background:white;white-space:normal}a{overflow-wrap:anywhere}a:after{content:" (" attr(href) ")"}}
   </style>
 </head>
 <body>
 <header><h1>MR-DMI</h1><p>Lecture assistée des cartes et comptes rendus d'implantation</p></header>
 <main>
-  <p class="hint">Version lecture 2026-10-07.15</p>
-  <button id="new-dossier" type="button">Nouveau dossier — effacer les données de l’examen</button>
+  <p class="hint">Version lecture 2026-10-08.16</p>
+  <button id="new-dossier" type="button">Nouveau dossier</button>
   <p id="reset-status" class="hint" role="status" aria-live="polite"></p>
-  <section id="examples">
-    <h2>Tester le parcours avec un exemple fictif</h2>
-    <p>Ces exemples utilisent des références techniques réelles et des paramètres fictifs. Ils testent le parcours et les contrôles ; ils ne mesurent pas la fiabilité de lecture d’une carte patient.</p>
-    <label for="example-case">Exemple à charger</label>
-    <select id="example-case"><option value="cardiac">Cardiaque — boîtier et sonde identifiés à 1,5 T</option><option value="neuro">Neurostimulateur — champ 3 T hors de la fiche intégrée</option><option value="cochlear">Cochlear CI612 — SAR tête dépassé à 3 T</option><option value="pump">MiniMed 780G — retrait non réalisé</option><option value="unknown">Dispositif inconnu — informations à compléter</option></select>
-    <button id="load-example" type="button">Charger et vérifier l’exemple fictif</button>
-    <button id="clear-example" type="button">Effacer les données de l’exemple</button>
-    <p id="example-status" class="notice" hidden></p>
-  </section>
-  <section id="install-help">
-    <h2>Installer MR-DMI sur le téléphone</h2>
-    <p class="hint">Dans Chrome sur Android, ouvrez le menu ⋮ puis « Installer l’application » ou « Ajouter à l’écran d’accueil ». Vous pourrez ensuite l’ouvrir par son icône. Une connexion Internet reste nécessaire pour la recherche et la comparaison.</p>
-    <button id="install" type="button" hidden>Installer MR-DMI</button>
-  </section>
   <section>
-    <h2>1. Photographier la carte ou le compte rendu</h2>
-    <p class="hint">La reconnaissance se fait dans votre navigateur. La photo n'est pas envoyée à MR-DMI. Si le document contient des données patient, ne partagez pas le texte extrait ni la photo par un autre canal sans autorisation adaptée.</p>
+    <h2>1. Identifier le dispositif</h2><p>Photographiez la carte, choisissez un fichier ou saisissez la marque et la référence.</p><button id="manual-entry" type="button">Saisir la marque et la référence</button>
+    <p class="hint">Lecture de la photo sur votre appareil.</p>
     <div class="row"><div><label for="camera">Prendre une photo</label><input id="camera" type="file" accept="image/*" capture="environment" aria-label="Ouvrir l’appareil photo"></div>
     <div><label for="document">Choisir une photo ou un fichier existant</label><input id="document" type="file" accept="image/*,application/pdf,.pdf,text/plain,.txt" aria-label="Choisir une image, un PDF ou un fichier texte sur le téléphone"></div></div>
+    <div id="manual-fields" hidden>    <div class="row"><div><label for="maker">Fabricant</label><input id="maker" autocomplete="off"></div>
+    <div><label for="model">Modèle exact</label><input id="model" autocomplete="off"></div></div>
+<button id="search-model" type="button">Rechercher les conditions IRM</button><p class="hint">Pour un système avec boîtier et sondes, toutes les références devront être vérifiées.</p></div>
     <p id="selected-file" class="hint" role="status"></p>
     <img id="preview" alt="Aperçu de la carte" hidden>
     <button id="read" type="button" disabled>Lire le document</button>
     <p id="ocr-status" role="status" aria-live="polite"></p>
+    <details><summary>Voir ou corriger le texte extrait</summary>
     <label for="raw">Texte lu, à corriger si nécessaire (vous pouvez aussi le coller ici)</label>
     <textarea id="raw" autocomplete="off" spellcheck="false"></textarea>
     <button id="analyze" type="button">Relever les indices du document</button>
+    </details>
     <div id="evidence" class="result" role="status" aria-live="polite" hidden></div>
   </section>
-  <section>
-    <h2>2. Vérifier les références</h2>
-    <div class="row"><div><label for="maker">Fabricant</label><input id="maker" autocomplete="off"></div>
-    <div><label for="model">Modèle exact</label><input id="model" autocomplete="off"></div></div>
-    <label for="udi">Identifiant de dispositif (UDI-DI), si présent</label>
-    <input id="udi" inputmode="text" autocomplete="off" placeholder="Ex. 00848486001414">
-    <p class="hint">Ne recopiez pas un numéro de séjour, une date, une taille de valve, un numéro de série ou un lot dans ce champ. La recherche automatique ne couvre pas tous les implants européens ni ceux posés avant l'UDI.</p>
-    <button id="search-model" type="button">Rechercher par fabricant et modèle</button>
-    <p class="hint">Numéro de série seul : identification publique non garantie. Pour un pacemaker, vérifiez aussi chaque sonde. Les résultats du catalogue américain sont des candidats à confirmer.</p>
-    <button id="lookup" type="button">Rechercher l'UDI-DI</button>
-    <div id="result" aria-live="polite"></div>
-  </section>
-  <section>
-    <h2>3. Contrôler les conditions IRM</h2>
-    <div class="notice"><strong>Identification du matériel et décision IRM : deux étapes distinctes.</strong> Un compte rendu peut indiquer une famille et une taille sans référence exacte. Une catégorie « MR Conditional » ne donne pas à elle seule les conditions de champ, SAR/B1+rms, gradients, antenne, position, délai ou programmation du DMI.</div>
-    <label for="scanner">Machine envisagée</label>
-    <select id="scanner"><option>Magnetom Altea 1,5 T</option><option>Magnetom Sola 1,5 T</option><option>Magnetom Flow 1,5 T</option><option>Autre machine — à préciser</option></select>
-    <p class="hint">Les sources fabricant sont recherchées automatiquement à partir des termes techniques reconnus. Aucune valeur de la notice n’est attribuée au patient tant que la référence exacte de chaque composant n’est pas établie.</p>
-  </section>
-  <section>
-    <h2>4. Retrouver les documents fabricant</h2>
-    <p class="hint">Saisissez uniquement des termes techniques du dispositif, jamais le compte rendu entier ni des données patient. Les résultats par famille sont des pistes, sans conditions IRM attribuables au patient.</p>
-    <label for="terms">Termes techniques extraits ou corrigés</label><input id="terms" placeholder="Ex. ATS Bentall" autocomplete="off">
-    <button id="search-docs" type="button">Chercher les sources</button>
-    <div id="documents" aria-live="polite"></div>
-  </section>
-  <section>
-    <h2>5. Paramètres IRM issus de la notice</h2>
-    <p id="manufacturer-parameters" class="notice" role="status">Aucun paramètre vérifié pour un modèle exact. L'application ne peut pas proposer de réglages machine à partir d'une famille, d'une taille ou d'un compte rendu incomplet.</p>
-    <details><summary>Comparaison manuelle pour une notice exacte déjà vérifiée</summary>
-    <p class="notice">Recopiez les limites de la notice du modèle confirmé. Les cases vides restent « inconnu » et la validation du service reste nécessaire.</p>
-    <div class="row"><div><label for="allowed-field">Champs autorisés par la notice (T, séparés par des virgules)</label><input id="allowed-field" placeholder="1.5, 3" inputmode="decimal"></div><div><label for="actual-field">Champ de la machine (T)</label><input id="actual-field" type="number" min="0" step="any" placeholder="1.5"></div></div>
-    <div class="row"><div><label for="max-sar">SAR corps entier maximal (W/kg)</label><input id="max-sar" type="number" min="0" step="any"></div><div><label for="actual-sar">SAR corps entier prévu (W/kg)</label><input id="actual-sar" type="number" min="0" step="any"></div></div>
-    <div class="row"><div><label for="max-b1">B1+rms maximal (µT)</label><input id="max-b1" type="number" min="0" step="any"></div><div><label for="actual-b1">B1+rms prévu (µT)</label><input id="actual-b1" type="number" min="0" step="any"></div></div>
-    <div class="row"><div><label for="max-gradient">Gradient spatial B0 maximal (T/m)</label><input id="max-gradient" type="number" min="0" step="any"></div><div><label for="actual-gradient">Gradient spatial B0 de la machine (T/m)</label><input id="actual-gradient" type="number" min="0" step="any"></div></div>
-    <div class="row"><div><label for="max-duration">Durée maximale par séquence (min)</label><input id="max-duration" type="number" min="0" step="any"></div><div><label for="actual-duration">Durée prévue par séquence (min)</label><input id="actual-duration" type="number" min="0" step="any"></div></div>
-    <button id="compare" type="button">Comparer les valeurs renseignées</button>
-    <div id="comparison" aria-live="polite"></div>
-    </details>
-  </section>
-  <section id="workflow">
-    <h2>Préparer le dossier IRM selon votre rôle</h2>
-    <label for="role">Votre rôle</label><select id="role"><option value="technologist">Manipulateur / équipe IRM</option><option value="secretary">Secrétariat — prise de rendez-vous</option><option value="prescriber">Médecin prescripteur</option></select>
-    <p class="hint">Parcours de travail local, sans connexion à un dossier patient. Le choix du rôle adapte les informations affichées ; il ne constitue pas une autorisation d’accès.</p>
+  <section id="workflow" hidden>
+    <h2>2. Vérifier les références et les conditions IRM</h2><p id="settings-status" class="hint">Confirmez les références pour afficher les contrôles utiles.</p>
     <p class="notice">Sources fabricant et organismes officiels uniquement. Une source américaine ne suffit pas à établir les conditions applicables en France : vérifier pays, version et association exacte des composants. Aucun résumé incomplet ne valide l’examen.</p>
     <div id="components"></div>
     <button id="add-component" type="button">Ajouter un composant</button>
@@ -120,7 +69,7 @@
       <button id="delete-machine" type="button">Supprimer le profil sélectionné</button>
       <p id="profile-status" aria-live="polite"></p>
     </details>
-    <details id="workflow-exam"><summary>Paramètres de l’examen pour l’équipe IRM</summary>
+    <details id="workflow-exam" hidden><summary>Réglages et préparation nécessaires pour ce dispositif</summary>
       <label for="workflow-field">Champ réellement envisagé (T)</label><select id="workflow-field"><option value="">À confirmer</option><option value="1.5">1,5 T</option><option value="3">3 T</option><option value="0.55">0,55 T</option></select>
       <label for="workflow-mode">Mode de fonctionnement</label><select id="workflow-mode"><option value="">Non renseigné</option><option value="normal">Normal</option><option value="first">Premier niveau contrôlé</option></select>
 <label for="workflow-bore">Tunnel et orientation du champ</label><select id="workflow-bore"><option value="">Non confirmé</option><option value="horizontal_cylindrical">Cylindrique horizontal</option><option value="other">Autre configuration</option></select>
@@ -148,6 +97,60 @@
     <button id="download-report" type="button" disabled>Télécharger la synthèse texte</button>
     <p class="hint">Synthèse technique locale sans nom patient, photo, texte du document ni numéro de série. Elle décrit une vérification partielle ; elle ne constitue pas une autorisation d’examen.</p>
   </section>
+<details id="advanced-tools"><summary>Options avancées et documents fabricant</summary>  <section>
+    <details><summary>Identification complémentaire par UDI</summary>
+    <label for="udi">Identifiant de dispositif (UDI-DI), si présent</label>
+    <input id="udi" inputmode="text" autocomplete="off" placeholder="Ex. 00848486001414">
+    <p class="hint">Ne recopiez pas un numéro de séjour, une date, une taille de valve, un numéro de série ou un lot dans ce champ. La recherche automatique ne couvre pas tous les implants européens ni ceux posés avant l'UDI.</p>
+
+    <p class="hint">Numéro de série seul : identification publique non garantie. Pour un pacemaker, vérifiez aussi chaque sonde. Les résultats du catalogue américain sont des candidats à confirmer.</p>
+    <button id="lookup" type="button">Rechercher l'UDI-DI</button>
+</details><div id="result" aria-live="polite"></div>
+  </section>
+  <section hidden>
+    <h2>Machine envisagée</h2>
+    <div class="notice"><strong>Identification du matériel et décision IRM : deux étapes distinctes.</strong> Un compte rendu peut indiquer une famille et une taille sans référence exacte. Une catégorie « MR Conditional » ne donne pas à elle seule les conditions de champ, SAR/B1+rms, gradients, antenne, position, délai ou programmation du DMI.</div>
+    <label for="scanner">Machine envisagée</label>
+    <select id="scanner"><option>Magnetom Altea 1,5 T</option><option>Magnetom Sola 1,5 T</option><option>Magnetom Flow 1,5 T</option><option>Autre machine — à préciser</option></select>
+    <p class="hint">Les sources fabricant sont recherchées automatiquement à partir des termes techniques reconnus. Aucune valeur de la notice n’est attribuée au patient tant que la référence exacte de chaque composant n’est pas établie.</p>
+  </section>
+  <section>
+    <details><summary>Documents fabricant et recherche complémentaire</summary>
+    <p class="hint">Saisissez uniquement des termes techniques du dispositif, jamais le compte rendu entier ni des données patient. Les résultats par famille sont des pistes, sans conditions IRM attribuables au patient.</p>
+    <label for="terms">Termes techniques extraits ou corrigés</label><input id="terms" placeholder="Ex. ATS Bentall" autocomplete="off">
+    <button id="search-docs" type="button">Chercher les sources</button>
+    <div id="documents" aria-live="polite"></div></details>
+  </section>
+  <section>
+    <details><summary>Notice et comparaison manuelle avancée</summary>
+    <p id="manufacturer-parameters" class="notice" role="status">Aucun paramètre vérifié pour un modèle exact. L'application ne peut pas proposer de réglages machine à partir d'une famille, d'une taille ou d'un compte rendu incomplet.</p>
+    <details><summary>Comparaison manuelle pour une notice exacte déjà vérifiée</summary>
+    <p class="notice">Recopiez les limites de la notice du modèle confirmé. Les cases vides restent « inconnu » et la validation du service reste nécessaire.</p>
+    <div class="row"><div><label for="allowed-field">Champs autorisés par la notice (T, séparés par des virgules)</label><input id="allowed-field" placeholder="1.5, 3" inputmode="decimal"></div><div><label for="actual-field">Champ de la machine (T)</label><input id="actual-field" type="number" min="0" step="any" placeholder="1.5"></div></div>
+    <div class="row"><div><label for="max-sar">SAR corps entier maximal (W/kg)</label><input id="max-sar" type="number" min="0" step="any"></div><div><label for="actual-sar">SAR corps entier prévu (W/kg)</label><input id="actual-sar" type="number" min="0" step="any"></div></div>
+    <div class="row"><div><label for="max-b1">B1+rms maximal (µT)</label><input id="max-b1" type="number" min="0" step="any"></div><div><label for="actual-b1">B1+rms prévu (µT)</label><input id="actual-b1" type="number" min="0" step="any"></div></div>
+    <div class="row"><div><label for="max-gradient">Gradient spatial B0 maximal (T/m)</label><input id="max-gradient" type="number" min="0" step="any"></div><div><label for="actual-gradient">Gradient spatial B0 de la machine (T/m)</label><input id="actual-gradient" type="number" min="0" step="any"></div></div>
+    <div class="row"><div><label for="max-duration">Durée maximale par séquence (min)</label><input id="max-duration" type="number" min="0" step="any"></div><div><label for="actual-duration">Durée prévue par séquence (min)</label><input id="actual-duration" type="number" min="0" step="any"></div></div>
+    <button id="compare" type="button">Comparer les valeurs renseignées</button>
+    <div id="comparison" aria-live="polite"></div>
+    </details></details>
+  </section>
+</details>
+<details><summary>Aide et exemples fictifs</summary>  <section id="examples">
+    <h2>Tester le parcours avec un exemple fictif</h2>
+    <p>Ces exemples utilisent des références techniques réelles et des paramètres fictifs. Ils testent le parcours et les contrôles ; ils ne mesurent pas la fiabilité de lecture d’une carte patient.</p>
+    <label for="example-case">Exemple à charger</label>
+    <select id="example-case"><option value="cardiac">Cardiaque — boîtier et sonde identifiés à 1,5 T</option><option value="neuro">Neurostimulateur — champ 3 T hors de la fiche intégrée</option><option value="cochlear">Cochlear CI612 — SAR tête dépassé à 3 T</option><option value="pump">MiniMed 780G — retrait non réalisé</option><option value="unknown">Dispositif inconnu — informations à compléter</option></select>
+    <button id="load-example" type="button">Charger et vérifier l’exemple fictif</button>
+    <button id="clear-example" type="button">Effacer les données de l’exemple</button>
+    <p id="example-status" class="notice" hidden></p>
+  </section>
+  <section id="install-help">
+    <h2>Installer MR-DMI sur le téléphone</h2>
+    <p class="hint">Dans Chrome sur Android, ouvrez le menu ⋮ puis « Installer l’application » ou « Ajouter à l’écran d’accueil ». Vous pourrez ensuite l’ouvrir par son icône. Une connexion Internet reste nécessaire pour la recherche et la comparaison.</p>
+    <button id="install" type="button" hidden>Installer MR-DMI</button>
+  </section>
+</details>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -167,7 +170,7 @@
   window.addEventListener('appinstalled',()=>{$('install').hidden=true;});
   let file,objectUrl,demoMode=false,documentEpoch=0;
   const selectFile=e=>{
-    documentEpoch++;
+    documentEpoch++;clearExample();$('workflow').hidden=true;
     demoMode=false;$('example-status').hidden=true;
     file=e.target.files[0];$('read').disabled=!file;
     if(objectUrl)URL.revokeObjectURL(objectUrl);
@@ -284,7 +287,7 @@
       if(epoch!==documentEpoch)return;
       $('raw').value=text;
       if(!$('raw').value.trim())throw Error('Aucun texte lisible détecté. Prenez une photo nette, de face et rapprochée, ou collez le texte du document.');
-      $('analyze').click();
+      $('analyze').click();$('import-components').click();$('workflow').hidden=false;
       $('ocr-status').textContent=evidenceScore($('raw').value)>0?'Lecture terminée avec indices partiels. Vérifiez tous les caractères des références et des séries sur le document original.':'Texte extrait sans dispositif reconnu. Essayez une capture d’écran directe ou une photo rapprochée des références ; aucune condition IRM établie.';
     }catch(err){if(epoch===documentEpoch)$('ocr-status').textContent='Lecture impossible : '+ocrErrorMessage(err);}
     finally{try{if(worker)await worker.terminate();}catch(error){console.warn('OCR cleanup failed');}finally{$('read').disabled=!file;}}
@@ -323,6 +326,8 @@
     const out=$('result');out.replaceChildren();$('search-model').disabled=true;
     out.textContent='Recherche du fabricant et du modèle…';
     try{
+      $('workflow').hidden=false;
+      if(!componentRows.some(r=>r.fields.model.value.toUpperCase()===$('model').value.trim().toUpperCase()&&r.fields.maker.value.toLowerCase()===$('maker').value.trim().toLowerCase()) && $('maker').value.trim() && $('model').value.trim()){const model=$('model').value.trim();const rule=DOCUMENTED_RULES.find(r=>r.maker.toLowerCase()===$('maker').value.trim().toLowerCase()&&r.models.includes(model.toUpperCase()));addComponent({maker:$('maker').value.trim(),model,category:rule?.category||'other'});}
       const query=new URLSearchParams({maker:$('maker').value.trim(),model:$('model').value.trim()});
       const response=await fetch('/api/search?'+query),data=await response.json();if(epoch!==documentEpoch)return;
       if(!response.ok||!data.ok)throw Error(data.error||'Recherche indisponible');
@@ -401,7 +406,7 @@
   const componentTypes=[['cardiac','Boîtier cardiaque'],['lead','Sonde / électrode'],['cochlear','Implant auditif'],['neuro','Neurostimulateur'],['extension','Extension / adaptateur'],['pump','Pompe / dispositif diabète'],['other','Autre dispositif']];
   const componentRows=[];
   let reportReady=false;
-  function invalidateReport(){reportReady=false;$('workflow-result').replaceChildren();$('print-report').disabled=true;$('download-report').disabled=true;}
+  function invalidateReport(){if(typeof refreshUsefulSettings==='function')refreshUsefulSettings();reportReady=false;$('workflow-result').replaceChildren();$('print-report').disabled=true;$('download-report').disabled=true;}
   $('print-report').addEventListener('click',()=>{if(reportReady)window.print();});
   $('download-report').addEventListener('click',()=>{
     if(!reportReady)return;
@@ -429,7 +434,7 @@
     const updateFields=()=>{for(const [key,wrap] of conditionalWraps)wrap.hidden=fields.category.value!==(key==='removed'?'pump':'cochlear');};fields.category.addEventListener('change',updateFields);updateFields();
     const checkWrap=document.createElement('label');const check=document.createElement('input');check.type='checkbox';check.style.width='auto';checkWrap.append(check,document.createTextNode(' Référence vérifiée sur la carte complète ou la traçabilité'));box.append(checkWrap);fields.confirmed=check;check.addEventListener('change',()=>{invalidateReport();});
     const remove=document.createElement('button');remove.type='button';remove.textContent='Retirer ce composant';remove.addEventListener('click',()=>{const i=componentRows.findIndex(r=>r.box===box);if(i>=0)componentRows.splice(i,1);box.remove();invalidateReport();componentRows.forEach((r,i)=>r.box.querySelector('legend').textContent='Composant '+(i+1));});box.append(remove);
-    componentRows.push({box,fields});$('components').append(box);
+    componentRows.push({box,fields});$('components').append(box);refreshUsefulSettings();
   }
   function getComponents(){return componentRows.map(({fields})=>Object.fromEntries(Object.entries(fields).map(([k,f])=>[k,k==='confirmed'?f.checked:f.value.trim()])));}
   $('add-component').addEventListener('click',()=>addComponent());
@@ -476,7 +481,7 @@
     const value=$('saved-machine').value;if(value===''){return;}const previous=machineProfiles.slice();machineProfiles.splice(Number(value),1);if(!persistProfiles()){machineProfiles=previous;return;}renderProfiles();$('profile-status').textContent='Profil supprimé de cet appareil.';
   });
   for(const key of machineKeys)for(const event of ['input','change'])$('workflow-'+key).addEventListener(event,()=>{selectedMachine='';});
-  $('role').addEventListener('change',()=>{invalidateReport();$('workflow-exam').hidden=$('role').value!=='technologist';});
+
   for(const id of ['complete-inventory','workflow-field','workflow-mode','workflow-gradient','workflow-slew','workflow-duration','workflow-wait','workflow-bore','workflow-nucleus','workflow-position','workflow-implant-location','workflow-coil','workflow-polarization','workflow-head-sar-reported','workflow-head-sar','workflow-body-sar','workflow-landmark','workflow-head-angle','workflow-external-removed','workflow-artifact-reviewed','workflow-therapy-plan']){ $(id).addEventListener('input',invalidateReport);$(id).addEventListener('change',invalidateReport); }
   $('evaluate-workflow').addEventListener('click',()=>{
     const number=id=>$(id).value===''?null:Number($(id).value);
@@ -485,17 +490,17 @@
     const evaluation=evaluateDmiWorkflow(components,exam,$('complete-inventory').value==='yes');
     const out=$('workflow-result');out.replaceChildren();
     const p=text=>{const el=document.createElement('p');el.textContent=text;out.append(el);};
-    p('MR-DMI — synthèse technique — version 2026-10-07.15 — '+new Date().toLocaleString('fr-FR'));
+    p('MR-DMI — synthèse technique — version 2026-10-08.16 — '+new Date().toLocaleString('fr-FR'));
     if(demoMode)p('EXEMPLE FICTIF — aucune donnée patient — paramètres de démonstration.');
     p('Vérification partielle ; aucune autorisation d’examen.');
     p(evaluation.status);
     for(const [i,c] of components.entries())p('Composant '+(i+1)+' — système '+c.system+' — '+(componentTypes.find(([value])=>value===c.category)?.[1]||'Type à préciser')+' — '+c.maker+' '+c.model+(c.length_cm?' — '+c.length_cm+' cm':'')+(c.category==='pump'?' — retrait '+({yes:'réalisé',no:'non réalisé'}[c.removed]||'non confirmé'):'')+(c.category==='cochlear'?' — aimant '+({present:'en place',removed:'retiré chirurgicalement'}[c.magnet]||'non confirmé')+' — kit '+({yes:'appliqué',no:'non appliqué'}[c.mri_kit]||'non confirmé'):'')+' — référence '+(c.confirmed?'confirmée':'non confirmée'));
     if(selectedMachine)p('Machine : '+selectedMachine);
     p('Inventaire complet : '+$('complete-inventory').selectedOptions[0].textContent);
-    if($('role').value==='technologist')p('Paramètres envisagés : champ '+(exam.field_t||'inconnu')+' T ; mode '+(exam.mode||'inconnu')+' ; gradient '+(exam.spatial_gradient_t_m??'inconnu')+' T/m ; slew rate '+(exam.gradient_slew_t_m_s??'inconnu')+' T/m/s ; temps actif '+(exam.total_active_min??'inconnu')+' min ; attente '+(exam.wait_min??'inconnu')+' min.');
-    if($('role').value==='technologist')p('Contrôles complémentaires saisis : '+['bore','nucleus','position','implant-location','coil','polarization','head-sar-reported','head-sar','body-sar','landmark','head-angle','external-removed','artifact-reviewed','therapy-plan'].map(key=>{const el=$('workflow-'+key);return document.querySelector('label[for="workflow-'+key+'"]').textContent+' : '+(el.value?(el.selectedOptions?.[0]?.textContent||el.value):'inconnu');}).join(' ; '));
-    p('Parcours : '+$('role').selectedOptions[0].textContent+' — France / Union européenne');
-    for(const task of dmiRoleTasks($('role').value,components))p('• '+task);
+    p('Paramètres envisagés : champ '+(exam.field_t||'inconnu')+' T ; mode '+(exam.mode||'inconnu')+' ; gradient '+(exam.spatial_gradient_t_m??'inconnu')+' T/m ; slew rate '+(exam.gradient_slew_t_m_s??'inconnu')+' T/m/s ; temps actif '+(exam.total_active_min??'inconnu')+' min ; attente '+(exam.wait_min??'inconnu')+' min.');
+    p('Contrôles complémentaires saisis : '+['bore','nucleus','position','implant-location','coil','polarization','head-sar-reported','head-sar','body-sar','landmark','head-angle','external-removed','artifact-reviewed','therapy-plan'].filter(key=>!$('workflow-'+key).hidden).map(key=>{const el=$('workflow-'+key);return document.querySelector('label[for="workflow-'+key+'"]').textContent+' : '+(el.value?(el.selectedOptions?.[0]?.textContent||el.value):'inconnu');}).join(' ; '));
+    p('France / Union européenne');
+    for(const task of dmiRoleTasks('technologist',components))p('• '+task);
     for(const missing of evaluation.missing)p('À compléter : '+missing);
     for(const record of evaluation.sources){
       const box=document.createElement('div');box.className='result';
@@ -503,7 +508,7 @@
       const note=document.createElement('p');note.textContent=record.note+(record.document_version?' — Notice : '+record.document_version+' ; '+record.pages:'');
       const link=document.createElement('a');link.href=record.source;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Ouvrir la source officielle ; vérifier la notice applicable';box.append(t,note,link);out.append(box);
     }
-    if($('role').value==='technologist')for(const f of evaluation.findings)p(f.component+' — '+f.criterion+' : '+f.status+' — '+f.detail);
+    for(const f of evaluation.findings)p(f.component+' — '+f.criterion+' : '+f.status+' — '+f.detail);
     reportReady=true;$('print-report').disabled=false;$('download-report').disabled=false;
     if(components.length)p('Les références et paramètres restent dans cette page. Aucun dossier patient ni compte utilisateur n’est créé.');
   });
@@ -515,7 +520,7 @@
     $('example-status').hidden=true;
   }
   $('new-dossier').addEventListener('click',()=>{
-    documentEpoch++;clearExample();file=null;
+    documentEpoch++;clearExample();file=null;$('workflow').hidden=true;$('manual-fields').hidden=true;
     if(objectUrl){URL.revokeObjectURL(objectUrl);objectUrl=null;}
     for(const id of ['camera','document','raw','maker','model','udi','terms'])$(id).value='';
     $('preview').removeAttribute('src');$('preview').hidden=true;$('read').disabled=true;
@@ -526,9 +531,37 @@
     $('saved-machine').value='';
     $('reset-status').textContent='Nouveau dossier : document, références, composants et paramètres effacés. Les profils de machines enregistrés sont conservés. Les fichiers déjà exportés restent sur votre appareil.';
   });
+
+  $('manual-entry').addEventListener('click',()=>{$('manual-fields').hidden=false;$('maker').focus();});
+  function refreshUsefulSettings(){
+    const components=getComponents();
+    const rules=evaluateDmiWorkflow(components,{field_t:$('workflow-field').value,transmit_coil:$('workflow-coil').value},false).sources;
+    const keys=new Set();
+    for(const r of rules){
+      if(r.external){keys.add('therapy-plan');continue;}
+      keys.add('field');
+      for(const [property,key] of [['mode','mode'],['spatial_gradient_t_m','gradient'],['gradient_slew_t_m_s','slew'],['total_active_min','duration'],['wait_min','wait']])if(r[property]!==undefined)keys.add(key);
+      if(r.technical_profile==='abbott-pacing-2022'){
+        ['bore','nucleus','position','implant-location','coil'].forEach(k=>keys.add(k));
+        if($('workflow-field').value==='3'||['local_head','local_upper','local_lower'].includes($('workflow-coil').value))keys.add('polarization');
+      }
+      if(r.technical_profile==='cochlear-emea-2024'){
+        ['bore','nucleus','position','polarization','head-angle','external-removed','artifact-reviewed'].forEach(k=>keys.add(k));
+        if($('workflow-field').value==='1.5')keys.add('mode');
+        if($('workflow-field').value==='3'){keys.add('head-sar-reported');if($('workflow-head-sar-reported').value==='yes')keys.add('head-sar');else if($('workflow-head-sar-reported').value==='no'){keys.add('body-sar');keys.add('landmark');}}
+      }
+    }
+    const settings=$('workflow-exam');const wasHidden=settings.hidden;settings.hidden=!keys.size;if(wasHidden&&keys.size)settings.open=true;
+    $('settings-status').textContent=keys.size?'Seuls les contrôles applicables aux références confirmées sont affichés. Les caractéristiques machine peuvent être reprises d’un profil enregistré.':'Confirmez la référence et tous les composants associés. Sans fiche exacte intégrée, aucun réglage automatique ne sera proposé.';
+    for(const input of settings.querySelectorAll('input,select')){
+      const key=input.id.replace('workflow-','');input.hidden=!keys.has(key);
+      const label=document.querySelector('label[for="'+input.id+'"]');if(label)label.hidden=input.hidden;
+    }
+  }
+  refreshUsefulSettings();
   $('clear-example').addEventListener('click',clearExample);
   $('load-example').addEventListener('click',()=>{
-    clearExample();demoMode=true;$('role').value='technologist';$('workflow-exam').hidden=false;$('workflow-exam').open=true;
+    clearExample();demoMode=true;$('workflow').hidden=false;$('workflow-exam').hidden=false;$('workflow-exam').open=true;
     const selected=$('example-case').value;
     const components=selected==='cardiac'?[{system:'1',category:'cardiac',maker:'Abbott',model:'PM2272'},{system:'1',category:'lead',maker:'Abbott',model:'2088TC',length_cm:52}]:selected==='neuro'?[{system:'1',category:'neuro',maker:'Abbott',model:'3660'},{system:'1',category:'lead',maker:'Abbott',model:'3186',length_cm:60}]:selected==='cochlear'?[{system:'1',category:'cochlear',maker:'Cochlear',model:'CI612',magnet:'present'}]:selected==='pump'?[{system:'1',category:'pump',maker:'Medtronic',model:'780G',removed:'no'}]:[{system:'1',category:'other',maker:'Fabricant à préciser',model:'Référence inconnue'}];
     for(const c of components){addComponent(c);componentRows[componentRows.length-1].fields.confirmed.checked=selected!=='unknown';}
