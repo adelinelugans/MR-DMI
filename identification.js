@@ -150,8 +150,10 @@ function evaluateDmiWorkflow(components,exam,inventoryComplete){
     if(rule.mode)findings.push({component:label,criterion:'Mode de fonctionnement',status:!exam.mode?'inconnu':exam.mode===rule.mode?'respecté':'non respecté',detail:'Mode normal cité par la source'});
   }
   for(const f of findings)if(f.status==='inconnu')missing.push(f.component+' : '+f.criterion+' non confirmé');
-  const blocked=findings.some(x=>x.status==='non respecté');
-  return {status:blocked?'Paramètre non conforme au résumé sélectionné — transmettre au service IRM':'Évaluation incomplète — conditions IRM non validées',blocked,findings,sources,missing:[...new Set(missing)]};
+  const declaredUnsafe=rows.some(c=>c.mr_label==='MR_UNSAFE');
+  if(declaredUnsafe)missing.push('MR Unsafe déclaré : ne pas réaliser avec ce dispositif ; confirmer la notice exacte');
+  const blocked=declaredUnsafe||findings.some(x=>x.status==='non respecté');
+  return {classification:'COMPATIBILITÉ NON ÉTABLIE',conclusion:blocked?'Compatibilité non établie — condition non respectée ; ne pas réaliser avec ces paramètres':'Compatibilité non établie — conditions fabricant non entièrement vérifiées',scan_authorized:false,compatibility_established:false,adjustments:findings.filter(f=>f.status!=='respecté').map(f=>f.component+' — '+f.criterion+' : '+(f.status==='non respecté'?'corriger selon la notice puis revérifier ; ':'vérifier avant toute décision ; ')+f.detail),status:blocked?'Paramètre non conforme au résumé sélectionné — transmettre au service IRM':'Évaluation incomplète — conditions IRM non validées',blocked,findings,sources,missing:[...new Set(missing)]};
 }
 function dmiRoleTasks(role,components){
   const categories=new Set(components.map(c=>c.category));
