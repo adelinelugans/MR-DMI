@@ -1,6 +1,6 @@
 // Cache only the public shell, never API responses or patient data.
 // Bump the version whenever index.html or identification.js changes.
-const CACHE = 'mr-dmi-shell-2026-10-08.18';
+const CACHE = 'mr-dmi-shell-2026-10-13.19';
 const ASSETS = ['/', '/identification.js', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
 self.addEventListener('install', event => event.waitUntil((async () => {
   const cache = await caches.open(CACHE);

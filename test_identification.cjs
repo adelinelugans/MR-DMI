@@ -123,3 +123,13 @@ assert.equal(normalizeMachineProfiles([profile])[0].values.sar,undefined);
 assert.equal(normalizeMachineProfiles([profile])[0].values.raw,undefined);
 assert.equal(normalizeMachineProfiles([null,{}]).length,0);
 console.log('Contrôles profils machine et exclusion des données examen réussis');
+
+// Formal report must never promote incomplete manufacturer summaries to clearance.
+for(const label of ['', 'MR_SAFE', 'MR_CONDITIONAL', 'MR_UNSAFE']){
+ const result=evaluateDmiWorkflow([{maker:'Fictif',model:'TEST',category:'other',confirmed:true,mr_label:label}],{},true);
+ assert.equal(result.classification,'COMPATIBILITÉ NON ÉTABLIE');
+ assert.equal(result.compatibility_established,false);
+ assert.equal(result.scan_authorized,false);
+ if(label==='MR_UNSAFE')assert.equal(result.blocked,true);
+}
+console.log('Formal conclusions: incomplete documents and declared Unsafe never allow MRI.');
