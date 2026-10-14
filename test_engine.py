@@ -104,3 +104,15 @@ class FormalConclusionTests(unittest.TestCase):
         for fields in ([None], [''], [True], [0]):
             with self.assertRaises(ValueError):
                 compare_conditions({'field_t':fields}, {'field_t':1.5})
+
+    def test_declared_unsafe_blocks_without_documentary_proof(self):
+        for label in ('MR_UNSAFE', 'MR Unsafe', ' mr_unsafe '):
+            with self.subTest(label=label):
+                result = compare_conditions({'mr_label': label}, {'field_t': 1.5})
+                self.assertEqual(result['classification'], 'COMPATIBILITÉ NON ÉTABLIE')
+                self.assertTrue(result['unsafe_declared'])
+                self.assertTrue(result['blocking'])
+                self.assertTrue(result['decision_blocked'])
+                self.assertFalse(result['scan_authorized'])
+                self.assertFalse(result['compatibility_established'])
+                self.assertIn('MR Unsafe déclaré', result['conclusion'])

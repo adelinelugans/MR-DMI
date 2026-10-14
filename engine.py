@@ -95,7 +95,7 @@ def compare_conditions(conditions, exam):
     return {
         **report,
         "findings": findings,
-        "blocking": report["classification"] == "MR_UNSAFE" or any(x["status"] == "dépassé" for x in findings),
+        "blocking": report["unsafe_declared"] or any(x["status"] == "dépassé" for x in findings),
         "overall": report["conclusion"],
         "missing_checks": ["Référence exacte de chaque implant et notice applicable", "Antennes et zone d'examen", "Positionnement et délai après implantation", "Mode, programmation et surveillance du dispositif", "Conditions additionnelles et protocole local"],
     }
@@ -114,7 +114,7 @@ RESTRICTION_CHECKS = (
 
 
 def formal_report(conditions, exam, findings):
-    label = str(conditions.get("mr_label", "")).upper().replace(" ", "_")
+    label = str(conditions.get("mr_label", "")).strip().upper().replace(" ", "_")
     references = conditions.get("references", [])
     if not isinstance(references, list) or any(not isinstance(r, dict) for r in references):
         raise ValueError("Références documentaires invalides")
@@ -142,12 +142,16 @@ def formal_report(conditions, exam, findings):
     missing += unknown
     if classification == "MR_UNSAFE":
         conclusion = "MR Unsafe — ne pas réaliser l’IRM avec ce dispositif selon cette notice"
+    elif label == "MR_UNSAFE":
+        conclusion = "MR Unsafe déclaré — ne pas réaliser en l’état ; confirmer la notice exacte avec le référent IRM"
+        missing.append("MR Unsafe déclaré : notice exacte à confirmer avec le référent IRM")
     elif failures:
         conclusion = "Compatibilité non établie — conditions non respectées ; ne pas réaliser avec ces paramètres"
     else:
         conclusion = "Compatibilité non établie — évaluation incomplète ; validation documentaire et clinique requise"
     return {
         "classification": classification,
+        "unsafe_declared": label == "MR_UNSAFE",
         "classification_basis": "Déclaration documentaire utilisateur ; authenticité et exhaustivité non vérifiées automatiquement",
         "conclusion": conclusion,
         "compatibility_established": False,

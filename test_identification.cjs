@@ -133,3 +133,12 @@ for(const label of ['', 'MR_SAFE', 'MR_CONDITIONAL', 'MR_UNSAFE']){
  if(label==='MR_UNSAFE')assert.equal(result.blocked,true);
 }
 console.log('Formal conclusions: incomplete documents and declared Unsafe never allow MRI.');
+
+for (const label of ['MR_UNSAFE', 'MR Unsafe', ' mr_unsafe ']) {
+  const report = evaluateDmiWorkflow([{mr_label:label}], {}, false);
+  assert.equal(report.blocked, true);
+  assert.match(report.conclusion, /MR Unsafe déclaré/);
+  assert.equal(report.scan_authorized, false);
+  assert.equal(report.classification, 'COMPATIBILITÉ NON ÉTABLIE');
+}
+console.log('Declared Unsafe always blocks, including absent notice and unconfirmed component.');

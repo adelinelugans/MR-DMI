@@ -65,3 +65,20 @@ invalide la synthèse, Nouveau dossier, impressions/exports et relance PWA aprè
 La recherche GUDID est complémentaire : son statut MRI n’autorise jamais une conclusion.
 Un passage en production nécessite cette recette ; conserver le SHA de production pour
 un retour arrière et renouveler la version du cache lors de tout futur correctif du shell.
+
+## Préparation — précautions de base, 14 octobre 2026
+
+Rubrique indépendante de questions courantes, filtrée localement par mots-clés :
+prothèses articulaires, opérations et matériels, aides auditives externes / implants,
+objets personnels, dents, corps étrangers, dispositifs thérapeutiques, patchs,
+protection auditive et matériel accompagnant. Réponses sourcées FDA / NHS,
+consultées le 14 octobre 2026. Aucun classement individuel ni autorisation déduit
+de ces fiches. Recherche limitée aux fiches disponibles, sans réponse générative.
+Cache du shell : 2026-10-14.21. Vérifier la lisibilité sur Samsung, la recherche
+avec accents, les cas inconnus et le fonctionnement hors ligne en recette.
+Le moteur de comparaison et ses règles restent inchangés.
+
+MR Unsafe déclaré : blocage conservateur même sans preuve documentaire complète,
+avec conclusion explicite dans les deux parcours. Le classement documentaire reste
+non établi tant que les preuves manquent. 25 tests Python et suites JavaScript
+réussis, dont régression Unsafe sans notice et recherche des précautions.

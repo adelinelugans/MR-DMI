@@ -29,9 +29,34 @@
 <body>
 <header><h1>MR-DMI</h1><p>Lecture assistée des cartes et comptes rendus d'implantation</p></header>
 <main>
-  <p class="hint">Version lecture 2026-10-13.19</p>
+  <p class="hint">Version lecture 2026-10-14.21</p>
   <button id="new-dossier" type="button">Nouveau dossier</button>
   <p id="reset-status" class="hint" role="status" aria-live="polite"></p>
+  <section id="basic-precautions" aria-labelledby="basic-title">
+    <h2 id="basic-title">Questions courantes et précautions IRM</h2>
+    <p>Pour les patients, médecins, soignants et étudiants : une réponse courte, les précautions et leurs sources.</p>
+    <details><summary>Consulter les questions ou rechercher un sujet</summary>
+    <p class="notice">Ces repères ne donnent aucune autorisation individuelle d’examen. Signalez toute opération, tout implant et tout objet porté. La notice du modèle exact et les consignes du service restent nécessaires. Une prothèse de hanche est aussi un dispositif implanté.</p>
+    <label for="precaution-search">Quel objet ou quelle situation vous pose question ?</label>
+    <input id="precaution-search" type="search" placeholder="Ex. prothèse de hanche, appareil auditif, téléphone, opération" autocomplete="off">
+    <p class="hint">Recherche de fiches par mots-clés, sur cet appareil ; ne saisissez aucune donnée patient. Les fiches restent accessibles hors ligne après installation.</p>
+    <p id="precaution-count" role="status" aria-live="polite"></p>
+    <div id="precaution-cards">
+      <details class="precaution-card" data-topic="hip" data-keywords="pth ptg hanche genou arthroplastie prothese orthopedique"><summary>Prothèse de hanche ou de genou : une IRM est-elle possible ?</summary><p><strong>Souvent possible, après vérification</strong></p><p>Une prothèse articulaire ne contre-indique pas automatiquement une IRM. Signalez-la au service et fournissez la carte ou le compte rendu. La référence et les conditions applicables doivent être vérifiées. Du métal peut dégrader les images près de la prothèse.</p><p class="hint">Sources : <a href="https://roh.nhs.uk/services-information/imaging/having-an-mri" target="_blank" rel="noopener noreferrer">Royal Orthopaedic Hospital</a> · <a href="https://www.fda.gov/radiation-emitting-products/mri-magnetic-resonance-imaging/what-patients-should-know-having-mri-exam" target="_blank" rel="noopener noreferrer">FDA — préparation</a> — consultées le 14/10/2026.</p></details>
+      <details class="precaution-card" data-topic="surgery" data-keywords="operation chirurgie opere operatoire plaque vis clou agrafe clip suture"><summary>Opération ancienne ou récente, plaques, vis, clips : que signaler ?</summary><p><strong>Préciser ce qui a été implanté</strong></p><p>Le nom d’une opération « simple » ne suffit pas : précisez les matériels laissés en place et la date. Apportez la traçabilité si possible. Ne confondez pas une plaque orthopédique avec un clip d’anévrisme cérébral, qui nécessite une identification spécifique.</p><p class="hint">Sources : <a href="https://roh.nhs.uk/services-information/imaging/having-an-mri" target="_blank" rel="noopener noreferrer">Royal Orthopaedic Hospital</a> · <a href="https://www.fda.gov/radiation-emitting-products/mri-magnetic-resonance-imaging/what-patients-should-know-having-mri-exam" target="_blank" rel="noopener noreferrer">FDA — préparation</a> — consultées le 14/10/2026.</p></details>
+      <details class="precaution-card" data-topic="hearing" data-keywords="appareil auditif prothese auditive oreille audition surdite cochleaire cochlear processeur"><summary>Appareil auditif externe ou implant auditif ?</summary><p><strong>Externe à retirer ; implant à vérifier</strong></p><p>Retirez les aides auditives externes avant d’entrer dans la salle IRM. Un implant cochléaire reste dans le corps : retirer le processeur externe ne suffit pas. Vérifiez modèle, champ et notice ; certains implants nécessitent une gestion particulière de l’aimant.</p><p class="hint">Sources : <a href="https://www.pah.nhs.uk/resources/mri-scan/" target="_blank" rel="noopener noreferrer">NHS — préparation</a> · <a href="https://www.fda.gov/medical-devices/cochlear-implants/cochlear-implants-and-mri-safety" target="_blank" rel="noopener noreferrer">FDA — implants cochléaires</a> — consultées le 14/10/2026.</p></details>
+      <details class="precaution-card" data-topic="phone" data-keywords="telephone portable smartphone montre connectee ecouteur airpods samsung iphone"><summary>Téléphone, montre connectée, écouteurs : peut-on les garder ?</summary><p><strong>À laisser hors de la salle IRM</strong></p><p>Ne les emportez pas dans la salle d’examen, même éteints. Ils peuvent être attirés ou endommagés. L’interdiction concerne l’entrée dans la salle, pas seulement le passage dans le tunnel. Déposez-les à l’endroit indiqué par l’équipe.</p><p class="hint">Sources : <a href="https://www.pah.nhs.uk/resources/mri-scan/" target="_blank" rel="noopener noreferrer">NHS — préparation</a> · <a href="https://www.fda.gov/radiation-emitting-products/mri-magnetic-resonance-imaging/benefits-and-risks" target="_blank" rel="noopener noreferrer">FDA — risques IRM</a> — consultées le 14/10/2026.</p></details>
+      <details class="precaution-card" data-topic="metal" data-keywords="bijou piercing cle monnaie ceinture soutien gorge vetement fermeture metal"><summary>Bijoux, piercing, clés, vêtements et objets métalliques ?</summary><p><strong>À retirer selon les consignes de l’équipe</strong></p><p>Videz les poches et retirez les objets amovibles : bijoux, piercings, clés, pièces et accessoires. Portez la tenue demandée. Si un objet ne se retire pas, prévenez l’équipe avant d’entrer ; ne supposez pas qu’il est sûr d’après son apparence.</p><p class="hint">Sources : <a href="https://www.pah.nhs.uk/resources/mri-scan/" target="_blank" rel="noopener noreferrer">NHS — préparation</a> · <a href="https://roh.nhs.uk/services-information/imaging/having-an-mri" target="_blank" rel="noopener noreferrer">Royal Orthopaedic Hospital</a> — consultées le 14/10/2026.</p></details>
+      <details class="precaution-card" data-topic="dental" data-keywords="dent dentaire couronne implant dentaire dentier orthodontie bridge"><summary>Couronnes, implants dentaires, appareil dentaire ?</summary><p><strong>Fixe à signaler ; amovible à retirer selon consignes</strong></p><p>Les soins dentaires fixes ne contre-indiquent généralement pas l’IRM, mais peuvent gêner les images. Signalez les appareils fixes. Les prothèses dentaires amovibles contenant du métal sont à retirer selon les consignes du service.</p><p class="hint">Sources : <a href="https://www.pah.nhs.uk/resources/mri-scan/" target="_blank" rel="noopener noreferrer">NHS — préparation</a> — consultées le 14/10/2026.</p></details>
+      <details class="precaution-card" data-topic="foreign" data-keywords="eclat limaille oeil yeux soudure meulage balle projectile corps etranger"><summary>Éclat métallique, ancien accident ou métal dans l’œil ?</summary><p><strong>Évaluation avant l’entrée en salle</strong></p><p>Signalez tout fragment métallique connu ou suspecté, notamment près de l’œil, et les accidents concernés. L’équipe décide des vérifications nécessaires avant l’examen. Un petit fragment n’est pas automatiquement sans danger.</p><p class="hint">Sources : <a href="https://roh.nhs.uk/services-information/imaging/having-an-mri" target="_blank" rel="noopener noreferrer">Royal Orthopaedic Hospital</a> — consultées le 14/10/2026.</p></details>
+      <details class="precaution-card" data-topic="devices" data-keywords="pacemaker stimulateur defibrillateur neurostimulateur pompe capteur diabete insuline"><summary>Pacemaker, neurostimulateur, pompe ou capteur ?</summary><p><strong>Vérification spécifique indispensable</strong></p><p>Signalez chaque dispositif implanté ou externe. Fournissez les références de tous les composants. Utilisez le parcours d’identification de MR-DMI et la notice exacte. Ne retirez pas un dispositif thérapeutique et ne changez pas son fonctionnement sans organisation avec l’équipe soignante.</p><p class="hint">Sources : <a href="https://www.fda.gov/radiation-emitting-products/mri-magnetic-resonance-imaging/benefits-and-risks" target="_blank" rel="noopener noreferrer">FDA — dispositifs et risques</a> — consultées le 14/10/2026.</p></details>
+      <details class="precaution-card" data-topic="patch" data-keywords="patch medicament transdermique tatouage maquillage permanent"><summary>Patch médicamenteux ou tatouage ?</summary><p><strong>À signaler avant l’examen</strong></p><p>Signalez les patchs et tatouages : un échauffement ou une irritation est possible. L’équipe vérifie la conduite à tenir, notamment pour les patchs. Prévenez immédiatement en cas de chaleur ou douleur pendant l’examen.</p><p class="hint">Sources : <a href="https://www.fda.gov/radiation-emitting-products/mri-magnetic-resonance-imaging/what-patients-should-know-having-mri-exam" target="_blank" rel="noopener noreferrer">FDA — préparation</a> — consultées le 14/10/2026.</p></details>
+      <details class="precaution-card" data-topic="noise" data-keywords="bruit protection auditive bouchon casque chaleur brulure douleur claustrophobie peur angoisse"><summary>Bruit, chaleur, douleur ou claustrophobie pendant l’IRM ?</summary><p><strong>Protection auditive et signalement immédiat</strong></p><p>Utilisez la protection auditive fournie. Signalez la claustrophobie avant l’examen. Repérez la sonnette d’appel ; prévenez l’équipe en cas de douleur, de chaleur inhabituelle ou de malaise.</p><p class="hint">Sources : <a href="https://www.fda.gov/radiation-emitting-products/mri-magnetic-resonance-imaging/what-patients-should-know-having-mri-exam" target="_blank" rel="noopener noreferrer">FDA — préparation</a> · <a href="https://www.fda.gov/radiation-emitting-products/mri-magnetic-resonance-imaging/benefits-and-risks" target="_blank" rel="noopener noreferrer">FDA — risques IRM</a> — consultées le 14/10/2026.</p></details>
+      <details class="precaution-card" data-topic="equipment" data-keywords="accompagnant fauteuil brancard oxygene bouteille chariot personnel infirmier eleve etudiant"><summary>Accompagnant, fauteuil, bouteille d’oxygène ou matériel de soin ?</summary><p><strong>Contrôle des personnes et du matériel</strong></p><p>Toute personne et tout équipement entrant dans la salle doivent être contrôlés par l’équipe IRM. N’introduisez pas de matériel ordinaire sans validation de son usage dans cet environnement. Le champ peut attirer violemment certains objets.</p><p class="hint">Sources : <a href="https://www.fda.gov/radiation-emitting-products/mri-magnetic-resonance-imaging/benefits-and-risks" target="_blank" rel="noopener noreferrer">FDA — risques IRM</a> — consultées le 14/10/2026.</p></details>
+    </div>
+    <p id="precaution-empty" hidden>Aucune fiche ne correspond à ces mots. Essayez le nom de l’objet seul ou contactez le service IRM. L’absence de résultat ne signifie pas que l’objet est autorisé.</p>
+    </details>
+  </section>
   <section>
     <h2>1. Identifier le dispositif</h2><p>Photographiez la carte, choisissez un fichier ou saisissez la marque et la référence.</p><button id="manual-entry" type="button">Saisir la marque et la référence</button>
     <p class="hint">Lecture de la photo sur votre appareil.</p>
@@ -521,7 +546,7 @@
     const evaluation=evaluateDmiWorkflow(components,exam,$('complete-inventory').value==='yes');
     const out=$('workflow-result');out.replaceChildren();
     const p=text=>{const el=document.createElement('p');el.textContent=text;out.append(el);};
-    p('MR-DMI — synthèse technique — version 2026-10-13.19 — '+new Date().toLocaleString('fr-FR'));
+    p('MR-DMI — synthèse technique — version 2026-10-14.21 — '+new Date().toLocaleString('fr-FR'));
     if(demoMode)p('EXEMPLE FICTIF — aucune donnée patient — paramètres de démonstration.');
     p('MR Safe : classement fabricant sans condition IRM ; MR Conditional : classement sous conditions ; MR Unsafe : classement incompatible ; compatibilité non établie : preuve ou vérification incomplète.');
     p('Vérification partielle ; aucune autorisation d’examen.');
@@ -613,6 +638,28 @@
     $('example-status').hidden=false;$('example-status').textContent='EXEMPLE FICTIF chargé. Résultat attendu : '+(selected==='cochlear'?'SAR moyen tête non conforme au résumé intégré.':selected==='pump'?'retrait non réalisé, préparation non conforme.':selected==='neuro'?'champ non conforme au résumé intégré.':selected==='unknown'?'références non confirmées, conditions inconnues.':'limites numériques citées respectées ; évaluation encore incomplète, notice France et restrictions restantes à vérifier.');
     $('evaluate-workflow').click();$('workflow').scrollIntoView({behavior:'smooth',block:'start'});
   });
+</script>
+<script id="precautions-search-script">
+(() => {
+  const input = document.getElementById('precaution-search');
+  const cards = [...document.querySelectorAll('.precaution-card')];
+  const normalize = text => String(text).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const stop = new Set(['une','avec','dans','pour','est','elle','il','que','qui','les','des','aux','peut','passe','passer','irm','faire','avoir','possible','question']);
+  function filter() {
+    const terms = normalize(input.value).match(/[a-z0-9]{3,}/g) || [];
+    const useful = terms.filter(term => !stop.has(term));
+    let visible = 0;
+    for (const card of cards) {
+      const text = normalize(card.querySelector('summary').textContent + ' ' + card.dataset.keywords);
+      card.hidden = !useful.every(term => text.includes(term));
+      if (!card.hidden) visible++;
+    }
+    document.getElementById('precaution-count').textContent = visible + ' fiche(s) disponible(s)';
+    document.getElementById('precaution-empty').hidden = visible !== 0;
+  }
+  input.addEventListener('input', filter);
+  filter();
+})();
 </script>
 </body>
 </html>

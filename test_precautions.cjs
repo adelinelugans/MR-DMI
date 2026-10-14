@@ -1,0 +1,24 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const html = fs.readFileSync('index.html', 'utf8');
+const cards = [...html.matchAll(/<details class="precaution-card" data-topic="([^"]+)" data-keywords="([^"]+)"><summary>([^<]+)<\/summary>/g)].map(([,topic,keywords,title]) => ({topic,dataset:{keywords},querySelector:()=>({textContent:title}),hidden:false}));
+assert.equal(cards.length,11);
+const elements = {'precaution-search':{value:'',addEventListener:(_,fn)=>elements.search=fn},'precaution-count':{},'precaution-empty':{}};
+const script = html.match(/<script id="precautions-search-script">([\s\S]*?)<\/script>/)[1];
+vm.runInNewContext(script,{document:{getElementById:id=>elements[id],querySelectorAll:()=>cards}});
+function find(value) {elements['precaution-search'].value=value;elements.search();return cards.filter(c=>!c.hidden).map(c=>c.topic);}
+assert.deepEqual(find('Une prothèse de hanche passe à l’IRM ?'),['hip']);
+assert.deepEqual(find('PTH'),['hip']);
+assert.deepEqual(find('APPAREIL AUDITIF'),['hearing']);
+assert.deepEqual(find('téléphone portable'),['phone']);
+assert.deepEqual(find('opération'),['surgery']);
+assert.deepEqual(find('objet totalement inconnu'),[]);
+assert.equal(elements['precaution-empty'].hidden,false);
+assert.match(html,/L’absence de résultat ne signifie pas que l’objet est autorisé/);
+assert.match(html,/retirer le processeur externe ne suffit pas/);
+assert.match(html,/même éteints/);
+assert.match(html,/Une prothèse de hanche est aussi un dispositif implanté/);
+assert.equal(find('').length,11);
+assert.ok(!/fetch\s*\(|localStorage|sessionStorage/.test(script));
+console.log('Precautions checks passed: accented questions, PTH, external hearing aid, phone, surgery, unknown and local-only search.');
