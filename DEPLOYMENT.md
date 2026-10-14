@@ -82,3 +82,20 @@ MR Unsafe déclaré : blocage conservateur même sans preuve documentaire compl�
 avec conclusion explicite dans les deux parcours. Le classement documentaire reste
 non établi tant que les preuves manquent. 25 tests Python et suites JavaScript
 réussis, dont régression Unsafe sans notice et recherche des précautions.
+
+## Sources complémentaires SecuriRM — préparation du 14 octobre 2026
+
+Deux onglets documentaires distincts : notices fabricants et SecuriRM.
+La recherche SecuriRM est déclenchée explicitement par l’utilisateur et envoie
+uniquement marque et référence via les endpoints publics du site. Ce ne sont
+pas des endpoints contractuels documentés : une modification, une indisponibilité
+ou un format inconnu produit une erreur explicite, jamais une conclusion clinique.
+Aucune réplication du catalogue ni téléchargement de notices. Indication source,
+champ textuel, fabricant, catégorie et date de consultation sont présentés à part.
+Aucune donnée SecuriRM ne modifie les règles ni les synthèses du moteur fabricant.
+Le 14 octobre 2026, l’accueil public et les pictogrammes sont accessibles, mais
+/block/q et /block/q-suggestions répondent HTTP 500. Aucun résultat réel ni
+taux de couverture n’est donc validé. Les tests de résultats utilisent des
+fixtures fictives ; la recette réelle valide seulement l’erreur et l’isolation.
+Une intégration de résultats pleinement validée attend le rétablissement du
+site ou une interface officielle fournie par SecuriRM. Cache 2026-10-14.22.

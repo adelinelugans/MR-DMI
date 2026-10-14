@@ -29,7 +29,7 @@
 <body>
 <header><h1>MR-DMI</h1><p>Lecture assistée des cartes et comptes rendus d'implantation</p></header>
 <main>
-  <p class="hint">Version lecture 2026-10-14.21</p>
+  <p class="hint">Version lecture 2026-10-14.22</p>
   <button id="new-dossier" type="button">Nouveau dossier</button>
   <p id="reset-status" class="hint" role="status" aria-live="polite"></p>
   <section id="basic-precautions" aria-labelledby="basic-title">
@@ -122,6 +122,29 @@
     <button id="download-report" type="button" disabled>Télécharger la synthèse texte</button>
     <p class="hint">Synthèse technique locale sans nom patient, photo, texte du document ni numéro de série. Elle décrit une vérification partielle ; elle ne constitue pas une autorisation d’examen.</p>
   </section>
+  <section id="documentary-sources" aria-labelledby="sources-heading">
+    <h2 id="sources-heading">Sources documentaires</h2>
+    <div role="tablist" aria-label="Origine des informations IRM">
+      <button id="source-maker-tab" type="button" role="tab" aria-selected="true" aria-controls="source-maker-panel" tabindex="0">Notices fabricants</button>
+      <button id="source-securirm-tab" type="button" role="tab" aria-selected="false" aria-controls="source-securirm-panel" tabindex="-1">SecuriRM — source complémentaire</button>
+    </div>
+    <div id="source-maker-panel" role="tabpanel" aria-labelledby="source-maker-tab">
+      <p class="hint">Les conditions et contre-indications applicables sont celles de la notice fabricant exacte, pour le modèle, le système, la version et le pays concernés.</p>
+      <label for="terms">Termes techniques extraits ou corrigés</label><input id="terms" placeholder="Ex. Abbott PM2272" autocomplete="off">
+      <button id="search-docs" type="button">Chercher les notices et portails fabricants</button>
+      <div id="documents" aria-live="polite"></div>
+    </div>
+    <div id="source-securirm-panel" role="tabpanel" aria-labelledby="source-securirm-tab" hidden>
+      <p class="notice">Informations publiées par SecuriRM, distinctes des conditions fabricant. Elles ne valident pas l’examen et ne modifient pas les contrôles ni la conclusion de MR-DMI. En cas de divergence, de référence différente ou de notice manquante, faites vérifier le dossier par le radiologue ou le référent IRM.</p>
+      <p>Recherchez la même référence et comparez les documents cités, leur pays et leur version. <a href="https://securirm.com/" target="_blank" rel="noopener noreferrer">Ouvrir SecuriRM dans un onglet séparé</a>.</p>
+      <label for="securirm-maker">Fabricant à rechercher sur SecuriRM</label><input id="securirm-maker" autocomplete="off">
+      <label for="securirm-model">Référence technique à rechercher</label><input id="securirm-model" autocomplete="off">
+      <p class="hint">Seuls ces termes techniques sont transmis à SecuriRM lors du clic. Aucun document, photo, numéro de série ou donnée patient. La recherche dépend de la disponibilité du site ; aucune copie de sa base n’est créée.</p>
+      <button id="securirm-copy" type="button">Reprendre la marque et la référence saisies</button>
+      <button id="securirm-search" type="button">Consulter les indications SecuriRM</button>
+      <div id="securirm-results" role="status" aria-live="polite">Aucune recherche SecuriRM réalisée. L’absence de résultat ne signifie pas que l’IRM est autorisée.</div>
+    </div>
+  </section>
 <details id="advanced-tools"><summary>Options avancées et documents fabricant</summary>  <section>
     <details><summary>Identification complémentaire par UDI</summary>
     <label for="udi">Identifiant de dispositif (UDI-DI), si présent</label>
@@ -138,13 +161,6 @@
     <label for="scanner">Machine envisagée</label>
     <select id="scanner"><option>Magnetom Altea 1,5 T</option><option>Magnetom Sola 1,5 T</option><option>Magnetom Flow 1,5 T</option><option>Autre machine — à préciser</option></select>
     <p class="hint">Les sources fabricant sont recherchées automatiquement à partir des termes techniques reconnus. Aucune valeur de la notice n’est attribuée au patient tant que la référence exacte de chaque composant n’est pas établie.</p>
-  </section>
-  <section>
-    <details><summary>Documents fabricant et recherche complémentaire</summary>
-    <p class="hint">Saisissez uniquement des termes techniques du dispositif, jamais le compte rendu entier ni des données patient. Les résultats par famille sont des pistes, sans conditions IRM attribuables au patient.</p>
-    <label for="terms">Termes techniques extraits ou corrigés</label><input id="terms" placeholder="Ex. ATS Bentall" autocomplete="off">
-    <button id="search-docs" type="button">Chercher les sources</button>
-    <div id="documents" aria-live="polite"></div></details>
   </section>
   <section>
     <details><summary>Notice et comparaison manuelle avancée</summary>
@@ -546,7 +562,7 @@
     const evaluation=evaluateDmiWorkflow(components,exam,$('complete-inventory').value==='yes');
     const out=$('workflow-result');out.replaceChildren();
     const p=text=>{const el=document.createElement('p');el.textContent=text;out.append(el);};
-    p('MR-DMI — synthèse technique — version 2026-10-14.21 — '+new Date().toLocaleString('fr-FR'));
+    p('MR-DMI — synthèse technique — version 2026-10-14.22 — '+new Date().toLocaleString('fr-FR'));
     if(demoMode)p('EXEMPLE FICTIF — aucune donnée patient — paramètres de démonstration.');
     p('MR Safe : classement fabricant sans condition IRM ; MR Conditional : classement sous conditions ; MR Unsafe : classement incompatible ; compatibilité non établie : preuve ou vérification incomplète.');
     p('Vérification partielle ; aucune autorisation d’examen.');
@@ -595,6 +611,7 @@
     $('manufacturer-parameters').textContent='Nouveau dossier : références et notice exacte à confirmer.';
     for(const id of ['allowed-field','actual-field','max-sar','actual-sar','max-b1','actual-b1','max-gradient','actual-gradient','max-duration','actual-duration'])$(id).value='';
     $('saved-machine').value='';
+    resetSecurirm();
     $('reset-status').textContent='Nouveau dossier : document, références, composants et paramètres effacés. Les profils de machines enregistrés sont conservés. Les fichiers déjà exportés restent sur votre appareil.';
   });
 
@@ -659,6 +676,55 @@
   }
   input.addEventListener('input', filter);
   filter();
+})();
+</script>
+<script id="securirm-source-script">
+let securirmRequest = 0;
+function resetSecurirm() {
+  securirmRequest++;
+  for (const id of ['securirm-maker','securirm-model']) document.getElementById(id).value='';
+  document.getElementById('securirm-results').textContent='Aucune recherche SecuriRM réalisée. L’absence de résultat ne signifie pas que l’IRM est autorisée.';
+}
+(() => {
+  const get = id => document.getElementById(id);
+  const tabs = [get('source-maker-tab'), get('source-securirm-tab')];
+  function activate(index) {
+    tabs.forEach((tab,i) => {tab.setAttribute('aria-selected',String(i===index)); tab.tabIndex=i===index?0:-1; get(tab.getAttribute('aria-controls')).hidden=i!==index;});
+  }
+  tabs.forEach((tab,i) => {
+    tab.addEventListener('click',()=>activate(i));
+    tab.addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();const next=event.key==='Home'?0:event.key==='End'?1:1-i;activate(next);tabs[next].focus();}});
+  });
+  const clear = () => {securirmRequest++;get('securirm-results').textContent='Référence modifiée : indications précédentes effacées. Relancez la recherche SecuriRM.';};
+  for(const id of ['securirm-maker','securirm-model','maker','model'])get(id).addEventListener('input',clear);
+  for(const id of ['camera','document'])get(id).addEventListener('change',resetSecurirm);
+  get('securirm-copy').addEventListener('click',()=>{clear();get('securirm-maker').value=get('maker').value;get('securirm-model').value=get('model').value;});
+  function paragraph(parent,text) {const p=document.createElement('p');p.textContent=text;parent.append(p);}
+  get('securirm-search').addEventListener('click',async()=>{
+    const maker=get('securirm-maker').value.trim(),model=get('securirm-model').value.trim(),out=get('securirm-results');
+    if(!maker||!model){out.textContent='Renseignez le fabricant et la référence technique exacte, sans donnée patient.';return;}
+    const ticket=++securirmRequest,epoch=documentEpoch;out.textContent='Consultation de SecuriRM…';get('securirm-search').disabled=true;
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
+    try {
+      const response=await fetch('/api/securirm?'+new URLSearchParams({maker,model}),{signal:controller.signal}),data=await response.json();
+      if(ticket!==securirmRequest||epoch!==documentEpoch)return;
+      out.replaceChildren();
+      if(!response.ok||!data.ok)throw Error(data.error||'SecuriRM indisponible ; consultez le site directement.');
+      paragraph(out,'Source : SecuriRM — consultée le '+data.retrieved_at+' — recherche '+maker+' '+model+'.');
+      paragraph(out,'Correspondances documentaires à confirmer ; aucune autorisation IRM.');
+      for(const candidate of data.results){
+        const box=document.createElement('div');box.className='result';
+        paragraph(box,candidate.reference+' — '+candidate.manufacturer+' — '+candidate.category);
+        paragraph(box,'Indication publiée par SecuriRM : '+candidate.label+' ; champ mentionné : '+(candidate.field||'non renseigné')+'.');
+        paragraph(box,'Référence '+(candidate.exact_reference?'identique au terme saisi ; fabricant et système à confirmer.':'différente du terme saisi ; ne pas appliquer au dispositif du patient.'));
+        paragraph(box,'Cette indication secondaire ne donne pas les conditions complètes. Consultez la fiche et la notice fabricant exacte.');
+        out.append(box);
+      }
+      if(!data.results.length)paragraph(out,'Aucune correspondance retournée. Cela ne prouve ni l’absence du dispositif dans SecuriRM ni sa compatibilité IRM.');
+      if(data.truncated)paragraph(out,'Résultats limités ; affinez la référence sur SecuriRM.');
+    }catch(error){if(ticket===securirmRequest&&epoch===documentEpoch)out.textContent=(error.name==='AbortError'?'Délai dépassé : SecuriRM indisponible.':error.message)+' Aucune indication récupérée ; ne pas conclure compatible. Vous pouvez ouvrir SecuriRM avec le lien ci-dessus.';}
+    finally{clearTimeout(timer);get('securirm-search').disabled=false;}
+  });
 })();
 </script>
 </body>
