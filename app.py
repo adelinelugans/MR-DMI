@@ -1,6 +1,8 @@
 from flask import Flask,request,jsonify,send_from_directory
 import sqlite3,urllib.request,urllib.parse,json,datetime,re,os
 from engine import search_catalog,compare_conditions
+from securirm import search_securirm
+from identification import validate_term
 from identification import model_query, candidates
 from urllib.error import HTTPError
 A=Flask(__name__,static_folder="web")
@@ -42,6 +44,20 @@ def search_devices():
   return jsonify(ok=False,error="Catalogue indisponible. Réessayez ultérieurement."),502
  except (OSError,ValueError):return jsonify(ok=False,error="Catalogue indisponible. Réessayez ultérieurement."),502
  return jsonify(ok=True,candidates=candidates(payload),note="Confirmez chaque référence sur la carte et identifiez tous les composants. Le statut GUDID ne remplace pas la notice IRM.")
+@A.get("/api/securirm")
+def securirm_lookup():
+ try:
+  maker=validate_term(request.args.get("maker", ""))
+  model=validate_term(request.args.get("model", ""))
+ except (ValueError,TypeError):return jsonify(ok=False,error="Renseignez uniquement un fabricant et une référence technique, sans donnée patient."),400
+ try:
+  response=jsonify(search_securirm(maker,model))
+  response.headers['Cache-Control']='no-store'
+  return response
+ except (OSError,ValueError,TypeError,KeyError):
+  response=jsonify(ok=False,error="Recherche SecuriRM indisponible ou réponse inexploitable. Consultez le site directement ; aucune indication n’a été récupérée.",scan_authorized=False,compatibility_established=False)
+  response.headers['Cache-Control']='no-store'
+  return response,502
 @A.get("/api/library")
 def lib():return jsonify(devices=[dict(x) for x in con().execute("SELECT di,company,brand,model,mri,source FROM devices").fetchall()])
 @A.get("/api/catalog")
